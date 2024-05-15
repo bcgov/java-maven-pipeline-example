@@ -1,0 +1,22 @@
+spec:
+  system: oneteam-example
+  type: ""
+  lifecycle: ""
+  owner: ""
+metadata:
+  name: java-maven-pipeline-example
+  description: ""
+  title: ""
+  annotations:
+    playbook.io.nrs.gov.bc.ca/pomRoot: ./
+    playbook.io.nrs.gov.bc.ca/unitTestsPath: ""
+    playbook.io.nrs.gov.bc.ca/gitHubPackages: true
+    playbook.io.nrs.gov.bc.ca/gitHubOwnerPack: bcgov/java-maven-pipeline-example
+    playbook.io.nrs.gov.bc.ca/artifactoryProject: ""
+    playbook.io.nrs.gov.bc.ca/artifactoryPackageType: ""
+    playbook.io.nrs.gov.bc.ca/deployOnPrem: true
+    playbook.io.nrs.gov.bc.ca/playbookPath: playbooks
+    playbook.io.nrs.gov.bc.ca/tomcatContext: ext#oneteam-example
+    playbook.io.nrs.gov.bc.ca/useAltAppDirName: false
+    playbook.io.nrs.gov.bc.ca/altAppDirName: ""
+    playbook.io.nrs.gov.bc.ca/addWebadeConfig: false

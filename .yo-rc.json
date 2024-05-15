@@ -1,0 +1,15 @@
+{
+  "generator-nr-repository-composer": {
+    "promptValues": {
+      "projectName": "oneteam-example",
+      "serviceName": "java-maven-pipeline-example",
+      "artifactoryProject": "cc20",
+      "pomRoot": "./",
+      "unitTestsPath": "",
+      "gitHubPackages": true,
+      "gitHubOwnerPack": "bcgov/java-maven-pipeline-example",
+      "deployOnPrem": true,
+      "playbookPath": "playbooks"
+    }
+  }
+}
