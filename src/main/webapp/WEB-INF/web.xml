@@ -4,4 +4,7 @@
 
 <web-app>
   <display-name>Web Application for testing</display-name>
+  <listener>
+    <listener-class>com.example.DeploymentTimestampListener</listener-class>
+  </listener>
 </web-app>
