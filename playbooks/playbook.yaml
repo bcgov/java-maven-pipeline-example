@@ -41,3 +41,4 @@
           context: "{{ context }}"
         webapp_root_log_level: "{{ log_level_root | default('INFO') }}"
         proxy_env: "{{ env_vars }}"
+        skip_ojdbc_install: true
