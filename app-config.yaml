@@ -20,3 +20,4 @@ metadata:
     playbook.io.nrs.gov.bc.ca/useAltAppDirName: false
     playbook.io.nrs.gov.bc.ca/altAppDirName: ""
     playbook.io.nrs.gov.bc.ca/addWebadeConfig: false
+    github.com/project-slug: ""
