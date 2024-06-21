@@ -16,7 +16,7 @@ pd_prop_build_number: "{{ lookup('ansible.builtin.env', 'PODMAN_BUILD_NUMBER') }
 pd_prop_service_install_directory: "{{ pd_prop_project_version }}-{{ pd_prop_build_number }}"
 
 # The following properties are custom to each particular service
-context: pub#oneteam-example
+context: ext#oneteam-example
 
 # By default, the Tomcat port is set dynamically by using the port_manager role
 # If you need to set a static port, replace the dynamic port assignment value with your static value
