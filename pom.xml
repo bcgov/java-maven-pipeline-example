@@ -54,10 +54,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.13.0</version>
         <configuration>
-          <verbose>true</verbose>
-          <fork>true</fork>
-          <executable><!-- path-to-javac --></executable>
-          <compilerVersion>17</compilerVersion>
+          <source>17</source>          <!-- Change as needed -->
+          <target>17</target>          <!-- Change as needed -->
         </configuration>
       </plugin>
 
