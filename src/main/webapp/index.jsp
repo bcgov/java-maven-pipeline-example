@@ -1,8 +1,8 @@
 <%@ page import="java.io.InputStream" %>
-<%@ page import="javax.xml.parsers.DocumentBuilderFactory" %>
-<%@ page import="javax.xml.xpath.XPath" %>
-<%@ page import="javax.xml.xpath.XPathConstants" %>
-<%@ page import="javax.xml.xpath.XPathFactory" %>
+<%@ page import="jakarta.xml.parsers.DocumentBuilderFactory" %>
+<%@ page import="jakarta.xml.xpath.XPath" %>
+<%@ page import="jakarta.xml.xpath.XPathConstants" %>
+<%@ page import="jakarta.xml.xpath.XPathFactory" %>
 <%@ page import="org.w3c.dom.Document" %>
 <%@ page import="org.w3c.dom.Node" %>
 <%
