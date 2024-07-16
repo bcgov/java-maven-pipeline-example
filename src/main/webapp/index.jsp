@@ -28,5 +28,8 @@
 <p>Tomcat Version : <%= application.getServerInfo() %></p>
 <p>Application Version: <%= version %></p>
 <p>Deployed at: <%= timestamp %></p>
+<p></p>
+<p>Servlet version: <%= application.getMajorVersion() %>.<%= application.getMinorVersion() %></p>
+<p>Java version: <%= System.getProperty("java.version") %></p>
 </body>
 </html>
