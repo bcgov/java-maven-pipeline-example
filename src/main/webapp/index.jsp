@@ -27,5 +27,8 @@
 <h2>Hello World!</h2>
 <p>Version: <%= version %></p>
 <p>Deployed at: <%= timestamp %></p>
+<p>Tomcat Version : <%= application.getServerInfo() %></p>
+<p>Servlet version: <%= application.getMajorVersion() %>.<%= application.getMinorVersion() %></p>
+<p>Java version: <%= System.getProperty("java.version") %></p>
 </body>
 </html>
