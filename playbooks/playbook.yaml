@@ -26,7 +26,7 @@
           filename: 'jdk-latest.tar.gz'
           checksum: 'sha256:4c6056f6167fae73ace7c3080b78940be5c87d54f5b08894b3517eed1cbb2c06'
           cacerts_path: 'jre/lib/security/cacerts'
-        use_proxy: false
+        use_proxy: true
 
     # create a self signed certificate to allow for HTTPS
     - name: self_signed_cert
