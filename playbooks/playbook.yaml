@@ -33,6 +33,8 @@
 
     # install & configure the Tomcat container
     - name: tomcat
+      vars:
+        tomcat_major_version: '9'
 
     # deploy the webapp
     - name: webapp
