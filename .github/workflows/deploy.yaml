@@ -175,5 +175,5 @@ jobs:
           DOWNLOAD_URL: ${{ needs.deploy-build.outputs.download_url || needs.deploy-tag.outputs.download_url }}
       # The automatically generated GitHub token will expire when the workflow ends. We need to wait so the job has time to clone the repo.
       - name: Sleep for 30 seconds
-        run: sleep 30s
+        run: sleep 300s
         shell: bash
