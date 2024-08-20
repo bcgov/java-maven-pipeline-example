@@ -19,14 +19,7 @@
     # individual JDK installation
     - name: jdk
       vars:
-        jdk_version:
-          type: 'openjdk'
-          major_version: 8
-          url: 'https://api.adoptium.net/v3/binary/latest/8/ga/linux/x64/jdk/hotspot/normal/eclipse'
-          filename: 'jdk-latest.tar.gz'
-          checksum: 'sha256:4c6056f6167fae73ace7c3080b78940be5c87d54f5b08894b3517eed1cbb2c06'
-          cacerts_path: 'jre/lib/security/cacerts'
-        use_proxy: true
+        proxy_env: "{{ env_vars }}"
 
     # create a self signed certificate to allow for HTTPS
     - name: self_signed_cert
