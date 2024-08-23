@@ -21,11 +21,15 @@
         e.printStackTrace();
     }
     String timestamp = (String) application.getAttribute("deploymentTimestamp");
+    String javaRuntimeVersion = System.getProperty("java.runtime.version");
+    String tomcatVersion = application.getServerInfo();
 %>
 <html>
 <body>
 <h2>Hello World!</h2>
 <p>Version: <%= version %></p>
 <p>Deployed at: <%= timestamp %></p>
+<p>Java Runtime: <%= javaRuntimeVersion %></p>
+<p>Tomcat Version: <%= tomcatVersion %></p>
 </body>
 </html>
