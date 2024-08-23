@@ -174,6 +174,6 @@ jobs:
           ARTIFACT_SHA256: ${{ needs.deploy-build.outputs.artifact_sha256 || needs.deploy-tag.outputs.artifact_sha256 }}
           DOWNLOAD_URL: ${{ needs.deploy-build.outputs.download_url || needs.deploy-tag.outputs.download_url }}
       # The automatically generated GitHub token will expire when the workflow ends. We need to wait so the job has time to clone the repo.
-      - name: Sleep for 30 seconds
-        run: sleep 30s
+      - name: Sleep
+        run: sleep 90s
         shell: bash
