@@ -40,6 +40,13 @@ jobs:
             -H 'accept: application/json' \
             -H 'Authorization: Bearer '"${BROKER_JWT}"'' \
             -d '')
+          if echo "$RESPONSE" | jq -e '.statusCode == 401' > /dev/null; then
+            echo "Status code is 401. This indicates an authorization error."
+            echo "Please check if your Broker Token is valid. Teams can generate a new one in Broker if needed."
+            echo "Link: https://broker.io.nrs.gov.bc.ca/browse/brokerAccount"
+            echo "Exiting..."
+            exit 1
+          fi
           echo "project_version=$(echo ${RESPONSE} | jq -r '.data[].actions[].package.version')" >> $GITHUB_OUTPUT
           echo "build_guid=$(echo ${RESPONSE} | jq -r '.data[].id')" >> $GITHUB_OUTPUT
           echo "build_number=$(echo ${RESPONSE} | jq -r '.data[].actions[].package.buildNumber')" >> $GITHUB_OUTPUT
@@ -105,6 +112,13 @@ jobs:
             -H 'accept: application/json' \
             -H 'Authorization: Bearer '"${BROKER_JWT}"'' \
             -d '')
+          if echo "$RESPONSE" | jq -e '.statusCode == 401' > /dev/null; then
+            echo "Status code is 401. This indicates an authorization error."
+            echo "Please check if your Broker Token is valid. Teams can generate a new one in Broker if needed."
+            echo "Link: https://broker.io.nrs.gov.bc.ca/browse/brokerAccount"
+            echo "Exiting..."
+            exit 1
+          fi
           echo "project_version=${PROJECT_VERSION}" >> $GITHUB_OUTPUT
           echo "build_guid=$(echo ${RESPONSE} | jq -r '.data[].id')" >> $GITHUB_OUTPUT
           echo "build_number=$(echo ${RESPONSE} | jq -r '.data[].actions[].package.buildNumber')" >> $GITHUB_OUTPUT
@@ -173,7 +187,8 @@ jobs:
           BUILD_NUMBER: ${{ needs.deploy-build.outputs.build_number || needs.deploy-tag.outputs.build_number }}
           ARTIFACT_SHA256: ${{ needs.deploy-build.outputs.artifact_sha256 || needs.deploy-tag.outputs.artifact_sha256 }}
           DOWNLOAD_URL: ${{ needs.deploy-build.outputs.download_url || needs.deploy-tag.outputs.download_url }}
-      # The automatically generated GitHub token will expire when the workflow ends. We need to wait so the job has time to clone the repo.
+      # The automatically generated GitHub token will expire when the workflow ends. We need to wait so the job has time to clone the repo
+      # and download the package
       - name: Sleep
         run: sleep 90s
         shell: bash
