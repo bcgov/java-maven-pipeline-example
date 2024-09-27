@@ -15,7 +15,7 @@ concurrency:
 
 env:
   BROKER_URL: https://broker.io.nrs.gov.bc.ca
-  BROKER_JWT: ${{ secrets.BROKER_JWT_0E727E83_F027_426A_A31C_D7C1CCEADDF6 }}
+  BROKER_JWT: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
   SERVICE_PROJECT: oneteam-example
   SERVICE_NAME: java-maven-pipeline-example
 
@@ -84,7 +84,7 @@ jobs:
       - name: Open intention
         uses: bcgov-nr/action-broker-intention-open@v2
         with:
-          broker_jwt: ${{ secrets.BROKER_JWT_0E727E83_F027_426A_A31C_D7C1CCEADDF6 }}
+          broker_jwt: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
           intention_path: intention.json
           quickstart: true
       - name: Set intention ID for deployment job
