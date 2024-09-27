@@ -22,3 +22,4 @@ metadata:
     playbook.io.nrs.gov.bc.ca/addWebadeConfig: false
     github.com/project-slug: ""
     playbook.io.nrs.gov.bc.ca/brokerJwtReference: BROKER_JWT_0E727E83_F027_426A_A31C_D7C1CCEADDF6
+    playbook.io.nrs.gov.bc.ca/clientId: 0e727e83-f027-426a-a31c-d7c1cceaddf6
