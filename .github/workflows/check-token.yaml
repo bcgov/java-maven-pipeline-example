@@ -1,0 +1,36 @@
+name: Check token expiration
+
+on:
+  workflow_call:
+    inputs:
+      BROKER_URL:
+        description: "The Broker URL"
+        required: true
+        type: string
+      BROKER_JWT:
+        description: "The broker_jwt to check"
+        required: true
+        type: string
+
+jobs:
+  check-jwt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check token expiration
+        run: |
+          RESPONSE_CODE=$(curl -o /dev/null -s -w "%{http_code}" -X 'GET' \
+            ${{ inputs.BROKER_URL }}/v1/health/token-check \
+            -H 'accept: */*' \
+            -H 'Authorization: Bearer '"${{ inputs.BROKER_JWT }}"'' \
+            )
+
+          if [ "$RESPONSE_CODE" -eq 401 ]; then
+            echo "Unauthorized (401)"
+            exit 1
+          elif [ "$RESPONSE_CODE" -eq 403 ]; then
+            echo "Invalid JWT: Block list has match"
+            exit 1
+          else
+            echo "Response code: $RESPONSE_CODE"
+          fi
