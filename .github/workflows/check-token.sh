@@ -3,7 +3,7 @@
 RESPONSE_CODE=$(curl -o /dev/null -s -w "%{http_code}" -X 'GET' \
   https://broker.io.nrs.gov.bc.ca/v1/health/token-check \
   -H 'accept: */*' \
-  -H 'Authorization: Bearer '"$BROKER_JWT"'' \
+  -H 'Authorization: Bearer '"$broker_jwt"'' \
   )
 
 if [ "$RESPONSE_CODE" -eq 401 ]; then
