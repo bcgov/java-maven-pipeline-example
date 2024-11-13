@@ -20,9 +20,18 @@ env:
   SERVICE_NAME: java-maven-pipeline-example
 
 jobs:
+  check_token_expiration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout token expiration
+        shell: bash
+        env:
+          BROKER_JWT: ${{ secrets.<%= brokerJwt %> }}
+        run: ./.github/workflows/check-token.sh
   build-release:
     name: Build and release
     runs-on: ubuntu-latest
+    needs: check_token_expiration
     permissions:
       contents: read
       packages: write
