@@ -6,8 +6,8 @@ on:
       url:
         description: "The Broker URL"
         default: https://broker.io.nrs.gov.bc.ca
-        required: true
         type: string
+    secrets:
       token:
         description: "The Broker token"
         required: true
@@ -22,7 +22,7 @@ jobs:
         shell: bash
         env:
           BROKER_URL: ${{ inputs.url }}
-          BROKER_JWT: ${{ inputs.token }}
+          BROKER_JWT: ${{ secrets.token }}
         run: |
           RESPONSE_CODE=$(curl -o /dev/null -s -w "%{http_code}" -X 'GET' \
             $BROKER_URL/v1/health/token-check \
