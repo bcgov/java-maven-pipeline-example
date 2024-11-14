@@ -22,9 +22,8 @@ env:
 jobs:
   check_token_expiration:
     uses: ./.github/workflows/check-token.yaml
-    with:
-      token: ${{ secrets.BROKER_JWT_0E727E83_F027_426A_A31C_D7C1CCEADDF6 }}
-
+    secrets:
+      token: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
   deploy-build:
     name: Deploy development version
     if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
@@ -61,7 +60,7 @@ jobs:
           echo "artifact_sha256=${artifact_checksum#sha256:}" >> $GITHUB_OUTPUT
         env:
           BROKER_URL: https://broker.io.nrs.gov.bc.ca
-          BROKER_JWT: ${{ secrets.BROKER_JWT }}
+          BROKER_JWT: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
           SERVICE_PROJECT: ${{ env.SERVICE_PROJECT }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
           GITHUB_SHA: ${{ github.sha }}
@@ -134,7 +133,7 @@ jobs:
           echo "artifact_sha256=${artifact_checksum#sha256:}" >> $GITHUB_OUTPUT
         env:
           BROKER_URL: https://broker.io.nrs.gov.bc.ca
-          BROKER_JWT: ${{ secrets.BROKER_JWT }}
+          BROKER_JWT: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
           SERVICE_PROJECT: ${{ env.SERVICE_PROJECT }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
       - name: Checkout repository
