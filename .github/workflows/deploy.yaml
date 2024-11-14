@@ -24,6 +24,7 @@ jobs:
     uses: ./.github/workflows/check-token.yaml
     with:
       token: ${{ secrets.BROKER_JWT_0E727E83_F027_426A_A31C_D7C1CCEADDF6 }}
+    secrets: inherit
 
   deploy-build:
     name: Deploy development version
