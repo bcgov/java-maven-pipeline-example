@@ -3,11 +3,11 @@ name: Check token expiration
 on:
   workflow_call:
     inputs:
-      BROKER_URL:
+      url:
         description: "The Broker URL"
         required: true
         type: string
-      BROKER_JWT:
+      token:
         description: "The broker_jwt to check"
         required: true
         type: string
@@ -20,9 +20,9 @@ jobs:
       - name: Check token expiration
         run: |
           RESPONSE_CODE=$(curl -o /dev/null -s -w "%{http_code}" -X 'GET' \
-            ${{ inputs.BROKER_URL }}/v1/health/token-check \
+            ${{ inputs.url }}/v1/health/token-check \
             -H 'accept: */*' \
-            -H 'Authorization: Bearer '"${{ inputs.BROKER_JWT }}"'' \
+            -H 'Authorization: Bearer '"${{ inputs.token }}"'' \
             )
 
           if [ "$RESPONSE_CODE" -eq 401 ]; then

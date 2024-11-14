@@ -23,8 +23,8 @@ jobs:
   check_token_expiration:
     uses: ./.github/workflows/check-token.yaml
     with:
-      BROKER_URL: https://broker.io.nrs.gov.bc.ca
-      BROKER_JWT: ${{ secrets.BROKER_JWT_0E727E83_F027_426A_A31C_D7C1CCEADDF6 }}
+      url: https://broker.io.nrs.gov.bc.ca
+      token: ${{ secrets.BROKER_JWT_0E727E83_F027_426A_A31C_D7C1CCEADDF6 }}
 
   deploy-build:
     name: Deploy development version
