@@ -19,14 +19,11 @@ jobs:
     steps:
       - name: Check token expiration
         shell: bash
-        env:
-          BROKER_URL: ${{ inputs.url }}
-          BROKER_JWT: ${{ secrets.token }}
         run: |
           RESPONSE_CODE=$(curl -o /dev/null -s -w "%{http_code}" -X 'GET' \
-            $BROKER_URL/v1/health/token-check \
+            ${{ inputs.url }}/v1/health/token-check \
             -H 'accept: */*' \
-            -H 'Authorization: Bearer '"$BROKER_JWT"'' \
+            -H 'Authorization: Bearer '"${{ secrets.token }}"'' \
             )
 
           if [ "$RESPONSE_CODE" -eq 401 ]; then
