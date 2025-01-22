@@ -15,11 +15,13 @@
         "environment": "tools"
       },
       "package": {
+        "architecture": "jvm",
         "version": "",
         "buildVersion": "",
         "buildNumber": 0,
         "name": "java-maven-pipeline-example",
-        "type": "war"
+        "type": "war",
+        "license": "Apache-2.0"
       }
     }
   ],

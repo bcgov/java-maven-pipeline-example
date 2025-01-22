@@ -1,12 +1,12 @@
 spec:
   system: oneteam-example
-  type: ""
-  lifecycle: ""
-  owner: ""
+  type: "website"
+  lifecycle: "experimental"
+  owner: "Oscar"
 metadata:
   name: java-maven-pipeline-example
-  description: ""
-  title: ""
+  description: "Pipeline testing example for Java + Maven + Tomcat application"
+  title: "ONETEAM-EXAMPLE"
   annotations:
     playbook.io.nrs.gov.bc.ca/pomRoot: ./
     playbook.io.nrs.gov.bc.ca/unitTestsPath: ""
@@ -20,5 +20,8 @@ metadata:
     playbook.io.nrs.gov.bc.ca/useAltAppDirName: false
     playbook.io.nrs.gov.bc.ca/altAppDirName: ""
     playbook.io.nrs.gov.bc.ca/addWebadeConfig: false
-    github.com/project-slug: ""
+    github.com/project-slug: "bcgov/java-maven-pipeline-example"
     playbook.io.nrs.gov.bc.ca/clientId: 0e727e83-f027-426a-a31c-d7c1cceaddf6
+    license: Apache-2.0
+apiVersion: backstage.io/v1alpha1
+kind: Component
