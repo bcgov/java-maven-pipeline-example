@@ -177,6 +177,7 @@ jobs:
           curl \
           --data-urlencode "token=${{ secrets.JENKINS_TOKEN }}" \
           --data-urlencode "githubToken=${{ secrets.GITHUB_TOKEN }}" \
+          --data-urlencode "brokerJwt=${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}" \
           --data-urlencode "artifactSha256=${ARTIFACT_SHA256}" \
           --data-urlencode "projectVersion=${PROJECT_VERSION}" \
           --data-urlencode "gitBranch=${{ github.ref_name }}" \
