@@ -10,11 +10,11 @@
     - "vars/custom/{{env_vars}}.yaml"
 
   roles:
-    # Establish the port number
-    - name: port_manager
-
     # prepare the installation environment by creating the necessary folders
     - name: create_project_directories
+    
+    # Establish the port number
+    - name: port_manager
 
     # individual JDK installation
     - name: jdk

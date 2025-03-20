@@ -22,6 +22,7 @@ env:
 jobs:
   check_token_expiration:
     uses: ./.github/workflows/check-token.yaml
+    permissions: {}
     secrets:
       token: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
   build-release:
