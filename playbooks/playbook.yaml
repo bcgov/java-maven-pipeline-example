@@ -11,29 +11,50 @@
 
   roles:
     # prepare the installation environment by creating the necessary folders
-    - name: create_project_directories
-    
+    # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/create_project_directories
+    - role: create_project_directories
+
     # Establish the port number
-    - name: port_manager
+    # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/port_manager
+    - role: port_manager
 
     # individual JDK installation
-    - name: jdk
-      vars:
-        proxy_env: "{{ env_vars }}"
+    # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/jdk
+    - role: jdk
 
     # create a self signed certificate to allow for HTTPS
-    - name: self_signed_cert
+    # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/self_signed_cert
+    - role: self_signed_cert
 
-    # install & configure the Tomcat container
-    - name: tomcat
-      vars:
-        tomcat_major_version: '9'
+    # Install & configure the Tomcat container
+    # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/tomcat
+    - role: tomcat
 
     # deploy the webapp
-    - name: webapp
+    # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/webapp
+    - role: webapp
       vars:
         webapp_war:
           context: "{{ context }}"
         webapp_root_log_level: "{{ log_level_root | default('INFO') }}"
-        proxy_env: "{{ env_vars }}"
-        skip_ojdbc_install: true
+
+  tasks:
+    - stat:
+      path: custom-tasks.yaml
+      register: playbookcustomtask
+    - ansible.builtin.include_tasks: custom-tasks.yaml
+      when: playbookcustomtask.stat.exists
+    # The following is an example of a custom-tasks.yaml for adding custom webapp configuration files
+    # ---
+    # - name: configure nonstandard files
+    #   template:
+    #     src: "{{ playbook_dir }}/templates/{{ item.src }}"
+    #     dest: "{{ item.dest }}"
+    #     mode: "0775"
+    #   become: yes
+    #   become_user: "{{ polaris_install_user }}"
+    #   with_items:
+    #     - {
+    #         src: "web.xml.j2",
+    #         dest: "{{ polaris_apps_service_install_home }}/webapps/{{ alt_app_dir_name | default(context) }}/WEB-INF/web.xml"
+    #       }
