@@ -20,7 +20,8 @@ env:
   SERVICE_NAME: java-maven-pipeline-example
 
 jobs:
-  check_token_expiration:
+  check-token-expiration:
+    name: Check token expiration
     uses: ./.github/workflows/check-token.yaml
     permissions: {}
     secrets:
@@ -28,7 +29,7 @@ jobs:
   build-release:
     name: Build and release
     runs-on: ubuntu-latest
-    needs: check_token_expiration
+    needs: check-token-expiration
     permissions:
       contents: read
       packages: write
