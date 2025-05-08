@@ -84,6 +84,7 @@ jobs:
       - name: Set download URL
         id: set-download-url
         run: |
+          sudo apt-get update
           sudo apt-get -qq install libxml2-utils
           GROUP_ID=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout --file ./pom.xml)
           GROUP_ID_PATH="${GROUP_ID//.//}"
