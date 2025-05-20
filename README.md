@@ -55,3 +55,11 @@ The Build and release workflow will be triggered automatically to build the rele
 4. Click **"Run workflow"** to start deployment.
 5. Click the link to the deployment job in the workflow logs to view the deployment job progress.
 
+## Configuring the Polaris Pipeline
+
+Configuration values can be defined in `playbooks/vars/custom/<env>.yaml` files where `<env>` is one of (`dev`, `test`, `prod`, or `all`).
+
+For example, the application may require a specific version of java (`jdk_major_version`), tomcat (`tomcat_major_version`), or a particular WebADE datastore (`webade_datastore`).
+
+Refer to the documentation for the Ansible roles used in [nr-polaris-collection](https://github.com/bcgov/nr-polaris-collection/blob/main/README.md) for a list of configurable variables and their behaviour.
+
