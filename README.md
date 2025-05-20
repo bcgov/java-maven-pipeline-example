@@ -32,7 +32,7 @@ Development builds can only be deployed to the dev and test environments. Do the
 2. Select the Deploy workflow.
 3. Select the branch to deploy.
 4. Click **"Run workflow"** to start deployment.
-6. Click the link to the deployment job in the workflow logs to view the deployment job progress.
+5. Click the link to the deployment job in the workflow logs to view the deployment job progress.
 
 ### 3. **Trigger a release build**
 
@@ -47,10 +47,11 @@ When ready to deploy code to production, create a release:
 
 The Build and release workflow will be triggered automatically to build the release. After it build successfully, you may proceed to trigger a deployment of the release to production.
 
-### 3. **Trigger a deployment to production**
+### 4. **Deploy a production build**
 
 1. Go to the **Actions** tab in your GitHub repository.
 2. Select the Deploy workflow.
 3. Select the tag (release) to deploy.
 4. Click **"Run workflow"** to start deployment.
-6. Click the link to the deployment job in the workflow logs to view the deployment job progress.
+5. Click the link to the deployment job in the workflow logs to view the deployment job progress.
+
