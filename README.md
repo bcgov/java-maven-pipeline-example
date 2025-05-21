@@ -11,6 +11,10 @@ The application will be available on http://localhost:8080.
 
 ## How to build and deploy using the Polaris Pipeline
 
+### Prerequisite: Link your NR Broker Account to GitHub
+
+Refer to [How to Link Your Broker Account to GitHub](https://apps.nrs.gov.bc.ca/int/confluence/display/OSCAR/Linking+to+a+GitHub+account)
+
 ### 1. **Trigger a development build**
 
 A development build is the first step before deploying code to production. Development builds are triggered automatically on version tag pushes or by opening a pull request on the `main` branch, but they can also be triggered manually. Do the following steps to trigger a development build manually:
