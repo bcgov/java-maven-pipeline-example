@@ -26,7 +26,7 @@
 %>
 <html>
 <body>
-  <h2>Hello World! (davidwashere)</h2>
+  <h2>Hello World! (david is cool)</h2>
 <p>Version: <%= version %></p>
 <p>Deployed at: <%= timestamp %></p>
 <p>Java Runtime: <%= javaRuntimeVersion %></p>
