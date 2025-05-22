@@ -50,6 +50,8 @@ jobs:
             -H 'accept: application/json' \
             -H 'Authorization: Bearer '"${BROKER_JWT}"'' \
             -d '')
+          echo "Broker API response:"
+          echo "$RESPONSE"
           if echo "$RESPONSE" | jq -e '.statusCode == 401' > /dev/null; then
             echo "Status code is 401. This indicates an authorization error."
             echo "Please check if your Broker Token is valid. Teams can generate a new one in Broker if needed."
@@ -111,6 +113,7 @@ jobs:
             echo "Explanation: This usually means the artifact is not a snapshot build, or the metadata is missing/corrupted."
             echo "Why it matters: Without <timestamp> and <buildNumber>, the workflow cannot construct the correct snapshot artifact filename, so the deployment cannot proceed."
             echo "Check if the build published a snapshot and if the repository is correct."
+            echo "--- maven-metadata.xml contents below ---"
             cat maven-metadata.xml
             echo "============================================================"
             echo
