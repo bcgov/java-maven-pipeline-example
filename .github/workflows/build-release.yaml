@@ -62,11 +62,22 @@ jobs:
           fi
       - name: Update pom.xml
         id: update-repo
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        #if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         shell: bash
         run: |
-          TAG=${{ github.ref_name }}
-          VERSION=${TAG#v}
+          if [[ ${{ startsWith(github.ref, 'refs/tags/v') }} = true ]]; then
+            TAG=${{ github.ref_name }}
+            VERSION=${TAG#v}
+          else
+            VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --file ./pom.xml)
+            if  [[ ${{ startsWith(github.ref, 'refs/heads/') }} = true ]]; then
+              PR_NUMBER=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=${{ github.ref }}&state=open&base=main" | jq .[0].number)
+            elif [[ ${{ startsWith(github.ref, 'refs/pull/') }} = true ]]; then
+              PR_NUMBER=${{ github.ref }}
+              PR_NUMBER=${PR_NUMBER//[^0-9]/}
+            fi
+            VERSION=${VERSION/%SNAPSHOT/$PR_NUMBER-SNAPSHOT}
+          fi
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           mvn versions:set -DnewVersion=${VERSION} --file ./pom.xml
       - name: Set build output parameters
