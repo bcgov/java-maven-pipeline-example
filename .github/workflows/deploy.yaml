@@ -59,6 +59,20 @@ jobs:
             echo "Exiting..."
             exit 1
           fi
+          if [ "$(echo "$RESPONSE" | jq '.data | length')" -eq 0 ]; then
+            echo
+            echo "============================================================"
+            echo "Error: Broker API response data is empty."
+            echo "------------------------------------------------------------"
+            echo "Explanation: No build information was found for this commit."
+            echo "Why it matters: The deployment cannot proceed without build metadata."
+            echo "Check if the build completed and published to Broker."
+            echo "--- Broker API response below ---"
+            echo "$RESPONSE"
+            echo "============================================================"
+            echo
+            exit 1
+          fi
           echo "project_version=$(echo ${RESPONSE} | jq -r '.data[].actions[].package.version')" >> $GITHUB_OUTPUT
           echo "build_guid=$(echo ${RESPONSE} | jq -r '.data[].id')" >> $GITHUB_OUTPUT
           echo "build_number=$(echo ${RESPONSE} | jq -r '.data[].actions[].package.buildNumber')" >> $GITHUB_OUTPUT
