@@ -90,7 +90,14 @@ jobs:
           GROUP_ID=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout --file ./pom.xml)
           GROUP_ID_PATH="${GROUP_ID//.//}"
           PACKAGE_TYPE=$(mvn help:evaluate -Dexpression=project.packaging -q -DforceStdout --file ./pom.xml)
-          curl -LO "${PACKAGE_REPO}/${GROUP_ID_PATH}/${SERVICE_NAME}/${PROJECT_VERSION}/maven-metadata.xml" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}"
+          CURL_RESPONSE=$(curl -w "\n%{http_code}" -LO "${PACKAGE_REPO}/${GROUP_ID_PATH}/${SERVICE_NAME}/${PROJECT_VERSION}/maven-metadata.xml" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}")
+          HTTP_STATUS=$(echo "$CURL_RESPONSE" | tail -n1)
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "Error: Failed to download maven-metadata.xml (HTTP $HTTP_STATUS)"
+            echo "Curl response:"
+            echo "$CURL_RESPONSE"
+            exit 1
+          fi
           if ! grep -q "<timestamp>" maven-metadata.xml || ! grep -q "<buildNumber>" maven-metadata.xml; then
             echo "Error: maven-metadata.xml does not contain <timestamp> or <buildNumber>."
             echo "Explanation: This usually means the artifact is not a snapshot build, or the metadata is missing/corrupted."
@@ -98,26 +105,26 @@ jobs:
             echo "Check if the build published a snapshot and if the repository is correct."
             cat maven-metadata.xml
             exit 1
-            fi
-            TIMESTAMP=$(xmllint --xpath 'string(//metadata/versioning/snapshot/timestamp)' maven-metadata.xml)
-            BUILD_NUMBER=$(xmllint --xpath 'string(//metadata/versioning/snapshot/buildNumber)' maven-metadata.xml)
-            if [ -z "$TIMESTAMP" ] || [ -z "$BUILD_NUMBER" ]; then
-              echo "Error: Could not extract timestamp or buildNumber from maven-metadata.xml"
-              echo "Explanation: The XML structure may be different than expected, or the snapshot build did not complete properly."
-              echo "Why it matters: Without these values, the workflow cannot determine the correct artifact version to download, so deployment will fail."
-              echo "Verify the contents of maven-metadata.xml and ensure the build process published the snapshot."
-              cat maven-metadata.xml
-              exit 1
-            fi
-            SNAPSHOT_VERSION="${PROJECT_VERSION//SNAPSHOT/$TIMESTAMP-$BUILD_NUMBER}"
-            ARTIFACT_NAME="${SERVICE_NAME}-${SNAPSHOT_VERSION}.${PACKAGE_TYPE}"
-            DOWNLOAD_URL="${PACKAGE_REPO}/${GROUP_ID_PATH}/${SERVICE_NAME}/${PROJECT_VERSION}/${ARTIFACT_NAME}"
-            echo "${DOWNLOAD_URL}"
-            echo "download_url=$(echo ${DOWNLOAD_URL})" >> $GITHUB_OUTPUT
-            env:
-              SERVICE_NAME: ${{ env.SERVICE_NAME }}
-              PROJECT_VERSION: ${{ steps.set-build-output.outputs.project_version }}
-              PACKAGE_REPO: ${{ env.PACKAGE_REPO }}
+          fi
+          TIMESTAMP=$(xmllint --xpath 'string(//metadata/versioning/snapshot/timestamp)' maven-metadata.xml)
+          BUILD_NUMBER=$(xmllint --xpath 'string(//metadata/versioning/snapshot/buildNumber)' maven-metadata.xml)
+          if [ -z "$TIMESTAMP" ] || [ -z "$BUILD_NUMBER" ]; then
+            echo "Error: Could not extract timestamp or buildNumber from maven-metadata.xml"
+            echo "Explanation: The XML structure may be different than expected, or the snapshot build did not complete properly."
+            echo "Why it matters: Without these values, the workflow cannot determine the correct artifact version to download, so deployment will fail."
+            echo "Verify the contents of maven-metadata.xml and ensure the build process published the snapshot."
+            cat maven-metadata.xml
+            exit 1
+          fi
+          SNAPSHOT_VERSION="${PROJECT_VERSION//SNAPSHOT/$TIMESTAMP-$BUILD_NUMBER}"
+          ARTIFACT_NAME="${SERVICE_NAME}-${SNAPSHOT_VERSION}.${PACKAGE_TYPE}"
+          DOWNLOAD_URL="${PACKAGE_REPO}/${GROUP_ID_PATH}/${SERVICE_NAME}/${PROJECT_VERSION}/${ARTIFACT_NAME}"
+          echo "${DOWNLOAD_URL}"
+          echo "download_url=$(echo ${DOWNLOAD_URL})" >> $GITHUB_OUTPUT
+        env:
+          SERVICE_NAME: ${{ env.SERVICE_NAME }}
+          PROJECT_VERSION: ${{ steps.set-build-output.outputs.project_version }}
+          PACKAGE_REPO: ${{ env.PACKAGE_REPO }}
   deploy-release-build:
     name: Trigger prod deployment
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
