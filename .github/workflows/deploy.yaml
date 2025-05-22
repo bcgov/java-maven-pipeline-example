@@ -46,8 +46,8 @@ jobs:
         id: lookup-pr-merge-ref
         run: |
           RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=${{ github.ref }}&state=open&base=main")
-          echo "pull_request_number=$(echo ${RESPONSE} | jq .[0].number)" >> $GITHUB_OUTPUT
-          echo "pull_request_merge_sha=$(echo ${RESPONSE} | jq .[0].merge_commit_sha)" >> $GITHUB_OUTPUT
+          echo "pull_request_number=$(echo ${RESPONSE} | jq -r .[0].number)" >> $GITHUB_OUTPUT
+          echo "pull_request_merge_sha=$(echo ${RESPONSE} | jq -r .[0].merge_commit_sha)" >> $GITHUB_OUTPUT
       - name: Set build output
         id: set-build-output
         run: |
