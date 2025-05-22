@@ -84,14 +84,25 @@ jobs:
       - name: Set download URL
         id: set-download-url
         run: |
+          set -e
           sudo apt-get update
           sudo apt-get -qq install libxml2-utils
           GROUP_ID=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout --file ./pom.xml)
           GROUP_ID_PATH="${GROUP_ID//.//}"
           PACKAGE_TYPE=$(mvn help:evaluate -Dexpression=project.packaging -q -DforceStdout --file ./pom.xml)
           curl -LO "${PACKAGE_REPO}/${GROUP_ID_PATH}/${SERVICE_NAME}/${PROJECT_VERSION}/maven-metadata.xml" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}"
-          TIMESTAMP=$(xmllint --xpath '//metadata/versioning/snapshot/timestamp/text()' maven-metadata.xml)
-          BUILD_NUMBER=$(xmllint --xpath '//metadata/versioning/snapshot/buildNumber/text()' maven-metadata.xml)
+          if ! grep -q "<timestamp>" maven-metadata.xml || ! grep -q "<buildNumber>" maven-metadata.xml; then
+            echo "Error: maven-metadata.xml does not contain <timestamp> or <buildNumber>."
+            cat maven-metadata.xml
+            exit 1
+          fi
+          TIMESTAMP=$(xmllint --xpath 'string(//metadata/versioning/snapshot/timestamp)' maven-metadata.xml)
+          BUILD_NUMBER=$(xmllint --xpath 'string(//metadata/versioning/snapshot/buildNumber)' maven-metadata.xml)
+          if [ -z "$TIMESTAMP" ] || [ -z "$BUILD_NUMBER" ]; then
+            echo "Error: Could not extract timestamp or buildNumber from maven-metadata.xml"
+            cat maven-metadata.xml
+            exit 1
+          fi
           SNAPSHOT_VERSION="${PROJECT_VERSION//SNAPSHOT/$TIMESTAMP-$BUILD_NUMBER}"
           ARTIFACT_NAME="${SERVICE_NAME}-${SNAPSHOT_VERSION}.${PACKAGE_TYPE}"
           DOWNLOAD_URL="${PACKAGE_REPO}/${GROUP_ID_PATH}/${SERVICE_NAME}/${PROJECT_VERSION}/${ARTIFACT_NAME}"
