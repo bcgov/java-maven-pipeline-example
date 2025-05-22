@@ -85,12 +85,17 @@ jobs:
           SERVICE_PROJECT: ${{ env.SERVICE_PROJECT }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
           GITHUB_SHA: ${{ github.sha }}
+
+      - name: Lookup PR Merge Ref
+        id: lookup-pr-merge-ref
+        run: |
+          echo "pull_request_number=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=${{ github.ref }}&state=open&base=main" | jq .[0].number)" >> $GITHUB_OUTPUT
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
             fetch-depth: 0
             fetch-tags: true
-            ref: ${{ github.ref }}
+            ref: refs/pull/${{ steps.lookup-pr-merge-ref.outputs.pull_request_number }}/merge
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
