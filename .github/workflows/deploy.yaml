@@ -42,6 +42,12 @@ jobs:
       artifact_sha256: ${{ steps.set-build-output.outputs.artifact_sha256 }}
       download_url: ${{ steps.set-download-url.outputs.download_url }}
     steps:
+      - name: Lookup PR Merge Ref
+        id: lookup-pr-merge-ref
+        run: |
+          RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=${{ github.ref }}&state=open&base=main")
+          echo "pull_request_number=$(echo ${RESPONSE} | jq .[0].number)" >> $GITHUB_OUTPUT
+          echo "pull_request_merge_sha=$(echo ${RESPONSE} | jq .[0].merge_commit_sha)" >> $GITHUB_OUTPUT
       - name: Set build output
         id: set-build-output
         run: |
@@ -84,12 +90,7 @@ jobs:
           BROKER_JWT: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
           SERVICE_PROJECT: ${{ env.SERVICE_PROJECT }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
-          GITHUB_SHA: ${{ github.sha }}
-
-      - name: Lookup PR Merge Ref
-        id: lookup-pr-merge-ref
-        run: |
-          echo "pull_request_number=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=${{ github.ref }}&state=open&base=main" | jq .[0].number)" >> $GITHUB_OUTPUT
+          GITHUB_SHA: ${{ steps.lookup-pr-merge-ref.outputs.pull_request_merge_sha }}
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
