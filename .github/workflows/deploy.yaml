@@ -93,27 +93,42 @@ jobs:
           CURL_RESPONSE=$(curl -w "\n%{http_code}" -LO "${PACKAGE_REPO}/${GROUP_ID_PATH}/${SERVICE_NAME}/${PROJECT_VERSION}/maven-metadata.xml" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}")
           HTTP_STATUS=$(echo "$CURL_RESPONSE" | tail -n1)
           if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo
+            echo "============================================================"
             echo "Error: Failed to download maven-metadata.xml (HTTP $HTTP_STATUS)"
+            echo "------------------------------------------------------------"
             echo "Curl response:"
             echo "$CURL_RESPONSE"
+            echo "============================================================"
+            echo
             exit 1
           fi
           if ! grep -q "<timestamp>" maven-metadata.xml || ! grep -q "<buildNumber>" maven-metadata.xml; then
+            echo
+            echo "============================================================"
             echo "Error: maven-metadata.xml does not contain <timestamp> or <buildNumber>."
+            echo "------------------------------------------------------------"
             echo "Explanation: This usually means the artifact is not a snapshot build, or the metadata is missing/corrupted."
             echo "Why it matters: Without <timestamp> and <buildNumber>, the workflow cannot construct the correct snapshot artifact filename, so the deployment cannot proceed."
             echo "Check if the build published a snapshot and if the repository is correct."
             cat maven-metadata.xml
+            echo "============================================================"
+            echo
             exit 1
           fi
           TIMESTAMP=$(xmllint --xpath 'string(//metadata/versioning/snapshot/timestamp)' maven-metadata.xml)
           BUILD_NUMBER=$(xmllint --xpath 'string(//metadata/versioning/snapshot/buildNumber)' maven-metadata.xml)
           if [ -z "$TIMESTAMP" ] || [ -z "$BUILD_NUMBER" ]; then
+            echo
+            echo "============================================================"
             echo "Error: Could not extract timestamp or buildNumber from maven-metadata.xml"
+            echo "------------------------------------------------------------"
             echo "Explanation: The XML structure may be different than expected, or the snapshot build did not complete properly."
             echo "Why it matters: Without these values, the workflow cannot determine the correct artifact version to download, so deployment will fail."
             echo "Verify the contents of maven-metadata.xml and ensure the build process published the snapshot."
             cat maven-metadata.xml
+            echo "============================================================"
+            echo
             exit 1
           fi
           SNAPSHOT_VERSION="${PROJECT_VERSION//SNAPSHOT/$TIMESTAMP-$BUILD_NUMBER}"
