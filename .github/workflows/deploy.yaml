@@ -190,6 +190,20 @@ jobs:
             echo "Exiting..."
             exit 1
           fi
+          if [ "$(echo "$RESPONSE" | jq '.data | length')" -eq 0 ]; then
+            echo
+            echo "============================================================"
+            echo "Error: Broker API response data is empty."
+            echo "------------------------------------------------------------"
+            echo "Explanation: No build information was found for this tag."
+            echo "Why it matters: The deployment cannot proceed without build metadata."
+            echo "Check if the build completed and published to Broker."
+            echo "--- Broker API response below ---"
+            echo "$RESPONSE"
+            echo "============================================================"
+            echo
+            exit 1
+          fi
           echo "project_version=${PROJECT_VERSION}" >> $GITHUB_OUTPUT
           echo "build_guid=$(echo ${RESPONSE} | jq -r '.data[].id')" >> $GITHUB_OUTPUT
           echo "build_number=$(echo ${RESPONSE} | jq -r '.data[].actions[].package.buildNumber')" >> $GITHUB_OUTPUT
@@ -216,6 +230,7 @@ jobs:
       - name: Set download URL
         id: set-download-url
         run: |
+          set -e
           sudo apt-get update
           sudo apt-get -qq install libxml2-utils
           GROUP_ID=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout --file ./pom.xml)
@@ -223,6 +238,18 @@ jobs:
           PACKAGE_TYPE=$(mvn help:evaluate -Dexpression=project.packaging -q -DforceStdout --file ./pom.xml)
           ARTIFACT_NAME="${SERVICE_NAME}-${PROJECT_VERSION}.${PACKAGE_TYPE}"
           DOWNLOAD_URL="${PACKAGE_REPO}/${GROUP_ID_PATH}/${SERVICE_NAME}/${PROJECT_VERSION}/${ARTIFACT_NAME}"
+          if [ -z "$GROUP_ID" ] || [ -z "$PACKAGE_TYPE" ] || [ -z "$ARTIFACT_NAME" ] || [ -z "$DOWNLOAD_URL" ]; then
+            echo
+            echo "============================================================"
+            echo "Error: Failed to construct the download URL for the release artifact."
+            echo "------------------------------------------------------------"
+            echo "Explanation: One or more required values (groupId, packaging, artifact name, or download URL) could not be determined."
+            echo "Why it matters: Without a valid download URL, the workflow cannot retrieve the release artifact, so deployment cannot proceed."
+            echo "Check that the pom.xml is present and contains valid groupId and packaging, and that environment variables are set correctly."
+            echo "============================================================"
+            echo
+            exit 1
+          fi
           echo "${DOWNLOAD_URL}"
           echo "download_url=$(echo ${DOWNLOAD_URL})" >> $GITHUB_OUTPUT
         env:
