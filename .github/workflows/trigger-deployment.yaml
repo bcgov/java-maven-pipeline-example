@@ -1,0 +1,80 @@
+name: Trigger deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment (dev, test, prod)'
+        required: true
+        type: choice
+        options:
+          - dev
+          - test
+          - prod
+      config_branch:
+        description: 'Use branch for testing configuration changes'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-dev:
+    name: Deploy to dev
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      environment: dev
+      config_branch: ${{ github.event.inputs.config_branch }}
+    secrets: inherit
+    if: |
+      github.event.inputs.environment == 'dev' ||
+      github.event.inputs.environment == 'test' ||
+      github.event.inputs.environment == 'prod'
+
+  approve-test:
+    name: Approve test deployment
+    needs: deploy-dev
+    if: |
+      github.event.inputs.environment == 'test' ||
+      github.event.inputs.environment == 'prod'
+    runs-on: ubuntu-latest
+    environment:
+      name: test
+      # This will require manual approval in the GitHub UI
+      # Set up the environment in GitHub with required reviewers
+    steps:
+      - run: echo "Approved for test deployment"
+
+  deploy-test:
+    name: Deploy to test
+    needs: approve-test
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      environment: test
+      config_branch: ${{ github.event.inputs.config_branch }}
+    secrets: inherit
+    if: |
+      github.event.inputs.environment == 'test' ||
+      github.event.inputs.environment == 'prod'
+
+  approve-prod:
+    name: Approve prod deployment
+    needs: deploy-test
+    if: github.event.inputs.environment == 'prod'
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+      # This will require manual approval in the GitHub UI
+    steps:
+      - run: echo "Approved for prod deployment"
+
+  deploy-prod:
+    name: Deploy to prod
+    needs: approve-prod
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      environment: prod
+      config_branch: ${{ github.event.inputs.config_branch }}
+    secrets: inherit
+    if: github.event.inputs.environment == 'prod'
