@@ -38,12 +38,20 @@ jobs:
       intention_id: ${{ steps.set-intention-id.outputs.intention_id }}
       branch: $${{ steps.set-branch.outputs.branch }}
     steps:
+      - name: Lookup PR Merge Ref
+        id: lookup-pr-merge-ref
+        run: |
+          RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=${{ github.ref }}&state=open&base=main" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json")
+          echo "pull_request_number=$(echo ${RESPONSE} | jq -r .[0].number)" >> $GITHUB_OUTPUT
+          echo "pull_request_merge_sha=$(echo ${RESPONSE} | jq -r .[0].merge_commit_sha)" >> $GITHUB_OUTPUT
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
             fetch-depth: 0
             fetch-tags: true
-            ref: ${{ github.ref }}
+            ref: refs/pull/${{ steps.lookup-pr-merge-ref.outputs.pull_request_number }}/merge
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
