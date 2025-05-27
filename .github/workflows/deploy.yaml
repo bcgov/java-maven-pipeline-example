@@ -52,7 +52,7 @@ jobs:
         id: set-build-output
         run: |
           RESPONSE=$(curl -s -X 'POST' \
-            "${BROKER_URL}/v1/intention/search?where=%7B%22actions.action%22%3A%22package-build%22%2C%22actions.service.project%22%3A%22${SERVICE_PROJECT}%22%2C%22actions.service.name%22%3A%22${SERVICE_NAME}%22%2C%22actions.package.buildVersion%22%3A%22${GITHUB_SHA}%22%7D&offset=0&limit=1" \
+            "${BROKER_URL}/v1/intention/search?where=%7B%22actions.action%22%3A%22package-build%22%2C%22actions.service.project%22%3A%22${SERVICE_PROJECT}%22%2C%22actions.service.name%22%3A%22${SERVICE_NAME}%22%2C%22actions.package.buildVersion%22%3A%22${BUILD_SHA}%22%7D&offset=0&limit=1" \
             -H 'accept: application/json' \
             -H 'Authorization: Bearer '"${BROKER_JWT}"'' \
             -d '')
@@ -90,7 +90,7 @@ jobs:
           BROKER_JWT: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
           SERVICE_PROJECT: ${{ env.SERVICE_PROJECT }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
-          GITHUB_SHA: ${{ steps.lookup-pr-merge-ref.outputs.pull_request_merge_sha }}
+          BUILD_SHA: ${{ steps.lookup-pr-merge-ref.outputs.pull_request_merge_sha }}
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
