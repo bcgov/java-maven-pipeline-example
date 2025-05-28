@@ -1,13 +1,15 @@
 name: Deploy
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
-      config_branch:
-        description: 'Use branch for testing configuration changes'
-        required: false
+      environment:
+        required: true
         type: string
-
+      config_branch:
+        required: false
+        type: string    
+  
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
