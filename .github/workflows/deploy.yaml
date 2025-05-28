@@ -294,6 +294,7 @@ jobs:
           --data-urlencode "configBranch=${{ inputs.config_branch || '' }}" \
           --data-urlencode "downloadUrl=${DOWNLOAD_URL}" \
           --data-urlencode "downloadType=GITHUB" \
+          --data-urlencode "envShort=${{ inputs.environment }}" \
           -H "Connection: close" \
           ${{ env.URL }}/${{ env.JOB }}
         env:
