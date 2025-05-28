@@ -1,4 +1,4 @@
-name: Trigger deployment
+name: Run deployment
 
 on:
   workflow_dispatch:
