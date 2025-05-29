@@ -1,4 +1,4 @@
-name: Run deployment
+name: Run deploy
 
 on:
   workflow_dispatch:
@@ -18,6 +18,9 @@ on:
 
 permissions:
   contents: read
+  packages: read
+  actions: read
+  pull-requests: read
 
 jobs:
   deploy-dev:

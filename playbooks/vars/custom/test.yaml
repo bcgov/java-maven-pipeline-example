@@ -1,3 +1,4 @@
 # Use this file for custom variables related to your webapp
 # tomcat_server_hosts: tomcat-servers-ravioli
+tomcat_server_hosts: tomcat-servers-ditalini
 log_level_root: DEBUG
