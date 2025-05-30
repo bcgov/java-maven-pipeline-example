@@ -40,6 +40,10 @@ jobs:
     needs: deploy-dev
     uses: ./.github/workflows/check-deploy-status.yaml
     secrets: inherit
+    if: |
+      github.event.inputs.environment == 'dev' ||
+      github.event.inputs.environment == 'test' ||
+      github.event.inputs.environment == 'prod'
 
   approve-test:
     name: Approve test deployment
@@ -72,6 +76,9 @@ jobs:
     needs: deploy-test
     uses: ./.github/workflows/check-deploy-status.yaml
     secrets: inherit
+    if: |
+      github.event.inputs.environment == 'test' ||
+      github.event.inputs.environment == 'prod'
 
   approve-prod:
     name: Approve prod deployment
@@ -99,3 +106,4 @@ jobs:
     needs: deploy-prod
     uses: ./.github/workflows/check-deploy-status.yaml
     secrets: inherit
+    if: github.event.inputs.environment == 'prod'
