@@ -2,7 +2,9 @@ name: Check Deploy Status
 
 on:
   workflow_call:
-permissions: {}
+permissions: 
+  contents: read
+  
 jobs:
   check-status:
     runs-on: ubuntu-latest
