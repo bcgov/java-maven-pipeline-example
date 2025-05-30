@@ -2,7 +2,7 @@ name: Check Deploy Status
 
 on:
   workflow_call:
-
+permissions: {}
 jobs:
   check-status:
     runs-on: ubuntu-latest
@@ -29,4 +29,3 @@ jobs:
         run: |
           echo "Deployment status is not success: ${{ steps.parse.outputs.status }}"
           exit 1
-          
