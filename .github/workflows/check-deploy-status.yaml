@@ -1,0 +1,33 @@
+name: Check Deploy Status
+
+on:
+  workflow_call:
+permissions: 
+  contents: read
+  
+jobs:
+  check-status:
+    runs-on: ubuntu-latest
+    env:
+      BROKER_URL: https://broker.io.nrs.gov.bc.ca
+      BROKER_JWT: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
+      SERVICE_PROJECT: oneteam-example
+      SERVICE_NAME: java-maven-pipeline-example
+    outputs:
+      status: ${{ steps.check.outputs.status }}
+    steps:
+      - name: Check deploy status via API
+        id: check
+        run: |
+          RESPONSE=$(curl -s -X 'POST' \
+            "${BROKER_URL}/v1/intention/search?where=%7B%22actions.action%22%3A%22package-installation%22%2C%22actions.service.project%22%3A%22${SERVICE_PROJECT}%22%2C%22actions.service.name%22%3A%22${SERVICE_NAME}%22%2C%22event.provider%22%3A%22polaris-deploy%22%7D&offset=0&limit=1" \
+            -H 'accept: application/json' \
+            -H 'Authorization: Bearer '"${BROKER_JWT}"'' \
+            -d '') 
+          echo "status=$(echo ${RESPONSE} | jq -r '.data[0].transaction.outcome')" >> $GITHUB_OUTPUT
+
+      - name: Fail if not success
+        if: steps.check.outputs.status != 'success'
+        run: |
+          echo "Deployment status is not success: ${{ steps.parse.outputs.status }}"
+          exit 1
