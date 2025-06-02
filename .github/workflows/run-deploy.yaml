@@ -37,7 +37,6 @@ jobs:
 
   approve-test:
     name: Approve test deployment
-    needs: check-deploy-status-dev
     if: |
       github.event.inputs.environment == 'test' ||
       github.event.inputs.environment == 'prod'
@@ -63,7 +62,6 @@ jobs:
  
   approve-prod:
     name: Approve prod deployment
-    needs: check-deploy-status-test
     if: github.event.inputs.environment == 'prod'
     runs-on: ubuntu-latest
     environment:
