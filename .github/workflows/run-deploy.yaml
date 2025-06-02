@@ -35,12 +35,6 @@ jobs:
       github.event.inputs.environment == 'test' ||
       github.event.inputs.environment == 'prod'
 
-  check-deploy-status-dev:
-    name: Check Deploy Status for Development
-    needs: deploy-dev
-    uses: ./.github/workflows/check-deploy-status.yaml
-    secrets: inherit
-
   approve-test:
     name: Approve test deployment
     needs: check-deploy-status-dev
@@ -66,13 +60,7 @@ jobs:
     if: |
       github.event.inputs.environment == 'test' ||
       github.event.inputs.environment == 'prod'
-  
-  check-deploy-status-test:
-    name: Check Deploy Status for Test 
-    needs: deploy-test
-    uses: ./.github/workflows/check-deploy-status.yaml
-    secrets: inherit
-
+ 
   approve-prod:
     name: Approve prod deployment
     needs: check-deploy-status-test
