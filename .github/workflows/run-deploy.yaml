@@ -37,7 +37,6 @@ jobs:
 
   deploy-test:
     name: Deploy to test
-    needs: approve-test
     uses: ./.github/workflows/deploy.yaml
     with:
       environment: test
@@ -49,7 +48,6 @@ jobs:
  
   deploy-prod:
     name: Deploy to prod
-    needs: approve-prod
     uses: ./.github/workflows/deploy.yaml
     with:
       environment: prod
