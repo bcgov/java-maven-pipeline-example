@@ -82,8 +82,3 @@ jobs:
     secrets: inherit
     if: github.event.inputs.environment == 'prod'
   
-  check-deploy-status-prod:
-    name: Check Deploy Status for Production 
-    needs: deploy-prod
-    uses: ./.github/workflows/check-deploy-status.yaml
-    secrets: inherit
