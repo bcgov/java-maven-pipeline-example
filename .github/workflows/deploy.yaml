@@ -327,8 +327,8 @@ jobs:
           GH_TASK_START="${{ steps.submit-job.outputs.gh_task_start }}"
           echo "Current GitHub task start: $GH_TASK_START"
 
-          # Wait for the Jenkins deployment job to be triggered (max 30s)
-          for i in {1..3}; do
+          # Wait for the Jenkins deployment job to be triggered (max 90s)
+          for i in {1..9}; do
             RESPONSE=$(curl -s -X 'POST' \
               "${BROKER_URL}/v1/intention/search?where=%7B%22actions.action%22%3A%22package-installation%22%2C%22actions.service.project%22%3A%22${SERVICE_PROJECT}%22%2C%22actions.service.name%22%3A%22${SERVICE_NAME}%22%2C%22event.provider%22%3A%22polaris-deploy%22%7D&offset=0&limit=1" \
               -H 'accept: application/json' \
@@ -339,8 +339,8 @@ jobs:
               echo "Found triggered job with transaction.start: $TX_START"
               break
             fi
-            if [ $i -eq 3 ]; then
-              echo "Error: Deployment job was not triggered within 30 seconds."
+            if [ $i -eq 9 ]; then
+              echo "Error: Deployment job was not triggered within 90 seconds."
               exit 1
             fi
             echo "Waiting for deployment job to be triggered..."
