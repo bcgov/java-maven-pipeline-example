@@ -285,6 +285,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # See: https://github.com/bcgov-nr/polaris-pipelines
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+            fetch-depth: 0
+            fetch-tags: true
+            ref: ${{ github.ref }}
       - name: Submit deployment job
         id: submit-job
         run: |
@@ -320,7 +326,7 @@ jobs:
       
       - name: Wait for Jenkins deployment job to be triggered and completed
         id: check-jenkins-job-status
-        run: sh ./.github/workflows/check-deploy-job-status.sh
+        run: ./.github/workflows/check-deploy-job-status.sh
         env:
           GH_TASK_START: ${{ steps.submit-job.outputs.gh_task_start }}
           BROKER_URL: https://broker.io.nrs.gov.bc.ca
