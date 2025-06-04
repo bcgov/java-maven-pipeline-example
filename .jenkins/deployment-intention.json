@@ -10,8 +10,8 @@
       "id": "login",
       "provision": ["token/self"],
       "service": {
-        "name": "java-maven-pipeline-example",
-        "project": "oneteam-example",
+        "name": "not-the-service",
+        "project": "a-different-example",
         "environment": "",
         "target": {
           "name": "jenkins-apps",
