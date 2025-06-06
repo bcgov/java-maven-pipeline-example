@@ -310,11 +310,11 @@ jobs:
               echo "No approver found for run ID: $RUN_ID"
               exit 1
             fi
-            echo "approver_id=$APPROVER_ID" >> $GITHUB_OUTPUT
+            echo "approver_id=${APPROVER_ID}@GitHub" >> $GITHUB_OUTPUT
           else
             # No reviewers required, use the GitHub actor's user id as the approver
             ACTOR_ID=$(gh api users/${{ github.actor }} | jq -r '.id')
-            echo "approver_id=$ACTOR_ID" >> $GITHUB_OUTPUT
+            echo "approver_id=${ACTOR_ID}@GitHub" >> $GITHUB_OUTPUT
           fi
         env:
           GH_TOKEN: ${{ github.token }}
@@ -327,7 +327,7 @@ jobs:
 
           # Require DEPLOYMENT_APPROVER in guid@GitHub format
           if [[ -n "${{ steps.get-deployment-approver.outputs.approver_id }}" ]]; then
-            DEPLOYMENT_APPROVER="${{ steps.get-deployment-approver.outputs.approver_id }}@GitHub"
+            DEPLOYMENT_APPROVER="${{ steps.get-deployment-approver.outputs.approver_id }}"
           else
             echo "Error: No deployment approver found. Failing deployment."
             exit 1
