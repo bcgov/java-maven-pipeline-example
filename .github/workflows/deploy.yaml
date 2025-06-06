@@ -305,7 +305,7 @@ jobs:
             # Reviewers are required, get the approver from approvals endpoint
             RUN_ID="${{ github.run_id }}"
             APPROVALS_JSON=$(gh api repos/${REPO}/actions/runs/${RUN_ID}/approvals)
-            APPROVER_ID=$(echo "$APPROVALS_JSON" | jq -r '.[] | .user.id // empty')
+            APPROVER_ID=$(echo "$APPROVALS_JSON" | jq -r 'sort_by(.created_at) | last | .user.id // empty')
             if [[ -z "$APPROVER_ID" ]]; then
               echo "No approver found for run ID: $RUN_ID"
               exit 1
