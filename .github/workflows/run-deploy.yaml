@@ -23,6 +23,12 @@ permissions:
   pull-requests: read
 
 jobs:
+  check-token-expiration:
+    name: Check token expiration
+    uses: ./.github/workflows/check-token.yaml
+    secrets:
+      token: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
+
   deploy-dev:
     name: Deploy to dev
     uses: ./.github/workflows/deploy.yaml
@@ -35,24 +41,10 @@ jobs:
       github.event.inputs.environment == 'test' ||
       github.event.inputs.environment == 'prod'
 
-  approve-test:
-    name: Approve test deployment
-    needs: deploy-dev
-    if: |
-      github.event.inputs.environment == 'test' ||
-      github.event.inputs.environment == 'prod'
-    runs-on: ubuntu-latest
-    environment:
-      name: test
-      # This will require manual approval in the GitHub UI
-      # Set up the environment in GitHub with required reviewers
-    steps:
-      - run: echo "Approved for test deployment"
-
   deploy-test:
     name: Deploy to test
-    needs: approve-test
     uses: ./.github/workflows/deploy.yaml
+    needs: deploy-dev
     with:
       environment: test
       config_branch: ${{ github.event.inputs.config_branch }}
@@ -61,21 +53,10 @@ jobs:
       github.event.inputs.environment == 'test' ||
       github.event.inputs.environment == 'prod'
  
-  approve-prod:
-    name: Approve prod deployment
-    needs: deploy-test
-    if: github.event.inputs.environment == 'prod'
-    runs-on: ubuntu-latest
-    environment:
-      name: prod
-      # This will require manual approval in the GitHub UI
-    steps:
-      - run: echo "Approved for prod deployment"
-
   deploy-prod:
     name: Deploy to prod
-    needs: approve-prod
     uses: ./.github/workflows/deploy.yaml
+    needs: deploy-test
     with:
       environment: prod
       config_branch: ${{ github.event.inputs.config_branch }}
