@@ -18,16 +18,11 @@
       <id>central</id>
       <url>https://repo.maven.apache.org/maven2/</url>
       <releases>
-        <enabled>enabled</enabled>
+        <enabled>true</enabled>
       </releases>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
-    </repository>
-    <repository>
-      <id>public</id>
-      <name>Public Maven repository</name>
-      <url>https://apps.nrs.gov.bc.ca/nexus/content/groups/public/</url>
     </repository>
   </repositories>
 
