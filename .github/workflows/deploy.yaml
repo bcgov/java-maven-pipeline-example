@@ -175,7 +175,6 @@ jobs:
     permissions:
       contents: read
       packages: read
-      pull-requests: read
     outputs:
       project_version: ${{ steps.set-tag-output.outputs.project_version }}
       build_guid: ${{ steps.set-tag-output.outputs.build_guid }}
