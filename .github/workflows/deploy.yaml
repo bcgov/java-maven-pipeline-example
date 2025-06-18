@@ -22,12 +22,6 @@ env:
   PACKAGE_REPO: https://maven.pkg.github.com/bcgov/java-maven-pipeline-example
 
 jobs:
-  check-token-expiration:
-    name: Check token expiration
-    uses: ./.github/workflows/check-token.yaml
-    permissions: {}
-    secrets:
-      token: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
   deploy-pre-release-build:
     name: "Trigger ${{ inputs.environment }} deploy"
     if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
