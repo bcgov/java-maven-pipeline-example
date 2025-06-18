@@ -47,10 +47,7 @@ jobs:
             echo "checkout_ref=${{ github.ref }}" >> $GITHUB_OUTPUT
             echo "version_modifier=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           elif [[ ${{ github.ref_name != 'main' }} = true ]]; then
-            RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=bcgov:${{ github.head_ref || github.ref_name }}&state=open&base=main" \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github+json")
-            PULL_REQUEST_NUMBER=$(echo ${RESPONSE} | jq -r .[0].number)
+            PULL_REQUEST_NUMBER=${{ github.event.pull_request.number }}
             echo "checkout_ref=refs/pull/$PULL_REQUEST_NUMBER/merge" >> $GITHUB_OUTPUT
             echo "version_modifier=$PULL_REQUEST_NUMBER" >> $GITHUB_OUTPUT
           else
