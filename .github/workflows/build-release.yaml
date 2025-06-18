@@ -62,7 +62,7 @@ jobs:
         with:
             fetch-depth: 0
             fetch-tags: true
-            ref: ${{ steps.lookup-pr-merge-ref.outputs.checkout_ref }} 
+            ref: ${{ steps.lookup-pr-merge-ref.outputs.checkout_ref }}
       - name: Set up Java
         uses: actions/setup-java@v4
         with:

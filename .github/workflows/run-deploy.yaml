@@ -1,4 +1,4 @@
-name: Run deploy
+name: Run java-maven-pipeline-example Deploy
 
 on:
   workflow_dispatch:
@@ -8,9 +8,9 @@ on:
         required: true
         type: choice
         options:
-          - dev
+          - development
           - test
-          - prod
+          - production
       config_branch:
         description: 'Use branch for testing configuration changes'
         required: false
@@ -29,38 +29,37 @@ jobs:
     secrets:
       token: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
 
-  deploy-dev:
-    name: Deploy to dev
+  deploy-development:
+    name: Deploy to development
     uses: ./.github/workflows/deploy.yaml
     needs: check-token-expiration
     with:
-      environment: dev
+      environment: development
       config_branch: ${{ github.event.inputs.config_branch }}
     secrets: inherit
     if: |
-      github.event.inputs.environment == 'dev' ||
+      github.event.inputs.environment == 'development' ||
       github.event.inputs.environment == 'test' ||
-      github.event.inputs.environment == 'prod'
+      github.event.inputs.environment == 'production'
 
   deploy-test:
     name: Deploy to test
+    needs: deploy-development
     uses: ./.github/workflows/deploy.yaml
-    needs: deploy-dev
     with:
       environment: test
       config_branch: ${{ github.event.inputs.config_branch }}
     secrets: inherit
     if: |
       github.event.inputs.environment == 'test' ||
-      github.event.inputs.environment == 'prod'
+      github.event.inputs.environment == 'production'
  
-  deploy-prod:
-    name: Deploy to prod
-    uses: ./.github/workflows/deploy.yaml
+  deploy-production:
+    name: Deploy to production
     needs: deploy-test
+    uses: ./.github/workflows/deploy.yaml
     with:
-      environment: prod
+      environment: production
       config_branch: ${{ github.event.inputs.config_branch }}
     secrets: inherit
-    if: github.event.inputs.environment == 'prod'
-  
+    if: github.event.inputs.environment == 'production'

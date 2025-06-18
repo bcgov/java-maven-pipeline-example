@@ -9,7 +9,7 @@ on:
       config_branch:
         required: false
         type: string
-  
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -22,11 +22,18 @@ env:
   PACKAGE_REPO: https://maven.pkg.github.com/bcgov/java-maven-pipeline-example
 
 jobs:
+  check-token-expiration:
+    name: Check token expiration
+    uses: ./.github/workflows/check-token.yaml
+    permissions: {}
+    secrets:
+      token: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
   deploy-pre-release-build:
     name: "Trigger ${{ inputs.environment }} deploy"
     if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    needs: check-token-expiration
     permissions:
       contents: read
       packages: read
@@ -167,10 +174,11 @@ jobs:
           PROJECT_VERSION: ${{ steps.set-build-output.outputs.project_version }}
           PACKAGE_REPO: ${{ env.PACKAGE_REPO }}
   deploy-release-build:
-    name: Trigger prod deployment
+    name: Trigger production deployment
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    needs: check-token-expiration
     permissions:
       contents: read
       packages: read
@@ -275,23 +283,23 @@ jobs:
     permissions:
       actions: read
       packages: read
-      contents: read  
+      contents: read
     runs-on: ubuntu-latest
     steps:
       # See: https://github.com/bcgov-nr/polaris-pipelines
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-            fetch-depth: 0
-            fetch-tags: true
-            ref: ${{ github.ref }}
+          fetch-depth: 0
+          fetch-tags: true
+          ref: ${{ github.ref }}
       - name: Get deployment approver
         id: get-deployment-approver
         run: |
           set -e
           ENVIRONMENT="${{ inputs.environment }}"
           REPO="${{ github.repository }}"
-          
+
           # Get environment info from the repo's deployment environments endpoint
           ENV_INFO=$(gh api repos/${REPO}/environments/${ENVIRONMENT})
           REVIEWERS=$(echo "$ENV_INFO" | jq -r '.protection_rules[]? | select(.reviewers != null) | .reviewers[0] // false')
@@ -300,7 +308,7 @@ jobs:
           else
             REVIEWERS_REQUIRED=true
           fi
-          
+
           if [[ "$REVIEWERS_REQUIRED" == "true" ]]; then
             # Reviewers are required, get the approver from approvals endpoint
             RUN_ID="${{ github.run_id }}"
@@ -333,7 +341,6 @@ jobs:
             echo "Error: No deployment approver found. Failing deployment."
             exit 1
           fi
-
           curl \
           --data-urlencode "token=${{ secrets.JENKINS_TOKEN }}" \
           --data-urlencode "githubToken=${{ secrets.GITHUB_TOKEN }}" \
@@ -346,7 +353,7 @@ jobs:
           --data-urlencode "configBranch=${{ inputs.config_branch || '' }}" \
           --data-urlencode "downloadUrl=${DOWNLOAD_URL}" \
           --data-urlencode "downloadType=GITHUB" \
-          --data-urlencode "envShort=${{ inputs.environment }}" \
+          --data-urlencode "envLong=${{ inputs.environment }}" \
           --data-urlencode "deploymentApprover=${DEPLOYMENT_APPROVER}" \
           -H "Connection: close" \
           ${{ env.URL }}/${{ env.JOB }}
@@ -360,7 +367,7 @@ jobs:
         run: |
           DEPLOYMENT_JOB_URL="${{ env.URL }}/job/${{ env.SERVICE_PROJECT }}/job/${{ env.SERVICE_NAME }}/"
           echo "Deployment job URL: ${DEPLOYMENT_JOB_URL}"
-      
+
       - name: Wait for Jenkins deployment job to be triggered and completed
         id: check-jenkins-job-status
         run: ./.github/workflows/check-deploy-job-status.sh
