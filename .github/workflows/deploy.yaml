@@ -334,7 +334,7 @@ jobs:
             echo "Error: No deployment approver found. Failing deployment."
             exit 1
           fi
-          curl \
+          RESPONSE=$(curl \
           --data-urlencode "token=${{ secrets.JENKINS_TOKEN }}" \
           --data-urlencode "githubToken=${{ secrets.GITHUB_TOKEN }}" \
           --data-urlencode "brokerJwt=${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}" \
@@ -349,7 +349,9 @@ jobs:
           --data-urlencode "envLong=${{ inputs.environment }}" \
           --data-urlencode "deploymentApprover=${DEPLOYMENT_APPROVER}" \
           -H "Connection: close" \
-          ${{ env.URL }}/${{ env.JOB }}
+          ${{ env.URL }}/${{ env.JOB }})
+          QUEUE_URL=$(echo "$RESPONSE" | grep -i Location | awk '{print $2}' | tr -d '\r\n')
+          echo "queue_url=${QUEUE_URL}" >> $GITHUB_OUTPUT
         env:
           PROJECT_VERSION: ${{ needs.deploy-pre-release-build.outputs.project_version || needs.deploy-release-build.outputs.project_version }}
           BUILD_GUID: ${{ needs.deploy-pre-release-build.outputs.build_guid || needs.deploy-release-build.outputs.build_guid }}
@@ -360,13 +362,40 @@ jobs:
         run: |
           DEPLOYMENT_JOB_URL="${{ env.URL }}/job/${{ env.SERVICE_PROJECT }}/job/${{ env.SERVICE_NAME }}/"
           echo "Deployment job URL: ${DEPLOYMENT_JOB_URL}"
-
+               
       - name: Wait for Jenkins deployment job to be triggered and completed
-        id: check-jenkins-job-status
-        run: ./.github/workflows/check-deploy-job-status.sh
+        run: |
+          # Wait for Jenkins to assign a build number
+          while true; do
+            QUEUE_INFO=$(curl -s "${QUEUE_URL}api/json")
+            EXECUTABLE_URL=$(echo "$QUEUE_INFO" | jq -r '.executable.url // empty')
+            if [ -n "$EXECUTABLE_URL" ]; then
+              BUILD_URL="$EXECUTABLE_URL"
+              break
+            fi
+            sleep 5
+          done
+
+          # Poll for build status
+          while true; do
+            BUILD_INFO=$(curl -s "${BUILD_URL}api/json")
+            BUILD_RESULT=$(echo "$BUILD_INFO" | jq -r '.result // empty')
+            if [ "$BUILD_RESULT" != "null" ] && [ -n "$BUILD_RESULT" ]; then
+              echo "Build finished with status: $BUILD_RESULT"
+              [ "$BUILD_RESULT" = "SUCCESS" ] || exit 1
+              break
+            fi
+            sleep 10
+          done
         env:
-          GH_TASK_START: ${{ steps.submit-job.outputs.gh_task_start }}
-          BROKER_URL: https://broker.io.nrs.gov.bc.ca
-          BROKER_JWT: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
-          SERVICE_PROJECT: ${{ env.SERVICE_PROJECT }}
-          SERVICE_NAME: ${{ env.SERVICE_NAME }}
+          QUEUE_URL: ${{ steps.submit-job.outputs.queue_url }}
+
+      # - name: Wait for Jenkins deployment job to be triggered and completed
+      #   id: check-jenkins-job-status
+      #   run: ./.github/workflows/check-deploy-job-status.sh
+      #   env:
+      #     GH_TASK_START: ${{ steps.submit-job.outputs.gh_task_start }}
+      #     BROKER_URL: https://broker.io.nrs.gov.bc.ca
+      #     BROKER_JWT: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
+      #     SERVICE_PROJECT: ${{ env.SERVICE_PROJECT }}
+      #     SERVICE_NAME: ${{ env.SERVICE_NAME }}
