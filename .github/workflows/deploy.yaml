@@ -15,9 +15,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SERVICE_PROJECT: oneteam-example
+  SERVICE_PROJECT: oscar-example
   SERVICE_NAME: java-maven-pipeline-example
-  JOB: buildByToken/buildWithParameters?job=oneteam-example/java-maven-pipeline-example
+  JOB: buildByToken/buildWithParameters?job=oscar-example/java-maven-pipeline-example
   URL: https://cd.io.nrs.gov.bc.ca
   PACKAGE_REPO: https://maven.pkg.github.com/bcgov/java-maven-pipeline-example
 
@@ -91,7 +91,7 @@ jobs:
           echo "artifact_sha256=${artifact_checksum#sha256:}" >> $GITHUB_OUTPUT
         env:
           BROKER_URL: https://broker.io.nrs.gov.bc.ca
-          BROKER_JWT: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
+          BROKER_JWT: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
           SERVICE_PROJECT: ${{ env.SERVICE_PROJECT }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
           BUILD_SHA: ${{ steps.lookup-pr-merge-ref.outputs.build_sha }}
@@ -222,7 +222,7 @@ jobs:
           echo "artifact_sha256=${artifact_checksum#sha256:}" >> $GITHUB_OUTPUT
         env:
           BROKER_URL: https://broker.io.nrs.gov.bc.ca
-          BROKER_JWT: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
+          BROKER_JWT: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
           SERVICE_PROJECT: ${{ env.SERVICE_PROJECT }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
       - name: Checkout repository
@@ -337,7 +337,7 @@ jobs:
           curl \
           --data-urlencode "token=${{ secrets.JENKINS_TOKEN }}" \
           --data-urlencode "githubToken=${{ secrets.GITHUB_TOKEN }}" \
-          --data-urlencode "brokerJwt=${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}" \
+          --data-urlencode "brokerJwt=${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}" \
           --data-urlencode "artifactSha256=${ARTIFACT_SHA256}" \
           --data-urlencode "projectVersion=${PROJECT_VERSION}" \
           --data-urlencode "gitBranch=${{ github.ref_name }}" \
@@ -367,6 +367,6 @@ jobs:
         env:
           GH_TASK_START: ${{ steps.submit-job.outputs.gh_task_start }}
           BROKER_URL: https://broker.io.nrs.gov.bc.ca
-          BROKER_JWT: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
+          BROKER_JWT: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
           SERVICE_PROJECT: ${{ env.SERVICE_PROJECT }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}

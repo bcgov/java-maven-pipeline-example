@@ -27,7 +27,7 @@ jobs:
     name: Check token expiration
     uses: ./.github/workflows/check-token.yaml
     secrets:
-      token: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
+      token: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
 
   deploy-development:
     name: Deploy to development

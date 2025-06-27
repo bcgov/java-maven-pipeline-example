@@ -10,7 +10,7 @@
       "id": "build",
       "provision": [],
       "service": {
-        "project": "oneteam-example",
+        "project": "oscar-example",
         "name": "java-maven-pipeline-example",
         "environment": "tools"
       },

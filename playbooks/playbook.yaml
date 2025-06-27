@@ -1,5 +1,5 @@
 ---
-- name: oneteam-example/java-maven-pipeline-example
+- name: oscar-example/java-maven-pipeline-example
   hosts: "{{ tomcat_server_hosts }}"
   collections:
     - polaris.deploy

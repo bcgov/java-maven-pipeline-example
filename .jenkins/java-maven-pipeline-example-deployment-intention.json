@@ -11,7 +11,7 @@
       "provision": ["token/self"],
       "service": {
         "name": "java-maven-pipeline-example",
-        "project": "oneteam-example",
+        "project": "oscar-example",
         "environment": "",
         "target": {
           "name": "jenkins-apps",
@@ -26,7 +26,7 @@
       "provision": ["token/self"],
       "service": {
         "name": "java-maven-pipeline-example",
-        "project": "oneteam-example",
+        "project": "oscar-example",
         "environment": ""
       }
     },
@@ -41,7 +41,7 @@
       },
       "service": {
         "name": "java-maven-pipeline-example",
-        "project": "oneteam-example",
+        "project": "oscar-example",
         "environment": ""
       },
       "package": {
