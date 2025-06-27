@@ -17,8 +17,8 @@ concurrency:
 
 env:
   BROKER_URL: https://broker.io.nrs.gov.bc.ca
-  BROKER_JWT: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
-  SERVICE_PROJECT: oneteam-example
+  BROKER_JWT: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
+  SERVICE_PROJECT: oscar-example
   SERVICE_NAME: java-maven-pipeline-example
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
     uses: ./.github/workflows/check-token.yaml
     permissions: {}
     secrets:
-      token: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
+      token: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
   build-release:
     name: Build and release
     runs-on: ubuntu-latest
@@ -115,7 +115,7 @@ jobs:
       - name: Open intention
         uses: bcgov-nr/action-broker-intention-open@v2
         with:
-          broker_jwt: ${{ secrets.broker_jwt_0e727e83_f027_426a_a31c_d7c1cceaddf6 }}
+          broker_jwt: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
           intention_path: intention.json
           quickstart: true
       - name: Echo intention ID for deploy job

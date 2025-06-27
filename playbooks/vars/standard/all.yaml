@@ -8,7 +8,7 @@ ansible_become_password: "{{ lookup('ansible.builtin.env', 'PODMAN_CD_PASS') }}"
 ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
 
 # General properties
-polaris_apps_project_name: "ONETEAM-EXAMPLE"
+polaris_apps_project_name: "OSCAR-EXAMPLE"
 polaris_apps_service_name: "java-maven-pipeline-example"
 
 polaris_apps_project_version: "{{ lookup('ansible.builtin.env', 'PODMAN_PROJECT_VERSION') }}"
