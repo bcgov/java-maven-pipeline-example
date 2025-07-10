@@ -16,7 +16,7 @@ metadata:
     playbook.io.nrs.gov.bc.ca/artifactoryPackageType: ""
     playbook.io.nrs.gov.bc.ca/deployOnPrem: true
     playbook.io.nrs.gov.bc.ca/playbookPath: playbooks
-    playbook.io.nrs.gov.bc.ca/tomcatContext: pub#oneteam-example
+    playbook.io.nrs.gov.bc.ca/tomcatContext: pub#java-maven-pipeline-example
     playbook.io.nrs.gov.bc.ca/useAltAppDirName: false
     playbook.io.nrs.gov.bc.ca/altAppDirName: ""
     playbook.io.nrs.gov.bc.ca/addWebadeConfig: false
