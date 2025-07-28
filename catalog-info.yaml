@@ -25,5 +25,7 @@ metadata:
     license: Apache-2.0
     composer.io.nrs.gov.bc.ca/generators: backstage,gh-maven-build
     playbook.io.nrs.gov.bc.ca/deployJasperReports: false
+    playbook.io.nrs.gov.bc.ca/configureNrArtifactory: false
+    playbook.io.nrs.gov.bc.ca/mavenBuildCommand: --batch-mode -Dmaven.test.skip=true -Pgithub deploy --file ./pom.xml
 apiVersion: backstage.io/v1alpha1
 kind: Component

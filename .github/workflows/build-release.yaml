@@ -1,4 +1,4 @@
-name: Build and release
+name: Build and release - java-maven-pipeline-example
 
 on:
   push:
@@ -83,6 +83,7 @@ jobs:
       - name: Update pom.xml
         id: update-repo
         shell: bash
+        working-directory: ./
         run: |
           if [[ ${{ startsWith(github.ref, 'refs/tags/v') }} = true ]]; then
             TAG=${{ github.ref_name }}
@@ -95,6 +96,7 @@ jobs:
           mvn versions:set -DnewVersion=${VERSION} --file ./pom.xml
       - name: Set build output parameters
         id: set-build-output-parameters
+        working-directory: ./
         run: |
           echo "project_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --file ./pom.xml)" >> $GITHUB_OUTPUT
           echo "artifact_id=$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout --file ./pom.xml)" >> $GITHUB_OUTPUT
@@ -126,6 +128,7 @@ jobs:
           INTENTION_ID: ${{ env.INTENTION_ID }}
       - name: Publish artifact
         id: publish-artifact
+        working-directory: ./
         run: |
           ARTIFACT_NAME="${ARTIFACT_ID}-${PROJECT_VERSION}.${PACKAGE_TYPE}"
           mvn --batch-mode -Dmaven.test.skip=true -Pgithub deploy --file ./pom.xml
