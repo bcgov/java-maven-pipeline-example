@@ -31,5 +31,6 @@
 <p>Deployed at: <%= timestamp %></p>
 <p>Java Runtime: <%= javaRuntimeVersion %></p>
 <p>Tomcat Version: <%= tomcatVersion %></p>
+<p>Message: Testing sparse checkout</p>
 </body>
 </html>
