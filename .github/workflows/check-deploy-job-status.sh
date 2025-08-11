@@ -8,6 +8,7 @@ sleep 30
 MAX_WAIT=30
 
 TRIGGER_ID=$(echo -n "${SERVICE_NAME} ${GITHUB_RUN_ID}" | jq -sRr @uri)
+echo "Trigger ID: $TRIGGER_ID"
 
 # Wait for the Jenkins deployment job to be triggered (max 90s)
 for ((i=1; i<=MAX_WAIT; i++)); do
