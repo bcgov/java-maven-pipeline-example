@@ -55,3 +55,4 @@ Vagrant.configure("2") do |config|
   SHELL
 
 end
+* text=auto eol=lf
