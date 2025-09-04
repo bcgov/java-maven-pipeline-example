@@ -8,7 +8,7 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 8000, host: 8000
 
   # Customize VM resources
-  config.vm.provider "hyperv" do |vb|
+  config.vm.provider "virtualbox" do |vb|
     vb.memory = "2048"
     vb.cpus = 2
   end
@@ -55,4 +55,3 @@ Vagrant.configure("2") do |config|
   SHELL
 
 end
-* text=auto eol=lf
