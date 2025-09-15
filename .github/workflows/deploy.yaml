@@ -46,6 +46,13 @@ jobs:
             RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=bcgov:${{ github.ref_name }}&state=open&base=main" \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json")
+            MERGEABLE=$(echo ${RESPONSE} | jq -r .[0].mergeable)
+            if [[ "$MERGEABLE" != "true" ]]; then
+              PULL_REQUEST_NUMBER=$(echo ${RESPONSE} | jq -r .[0].number)
+              echo "::error ::Pull request #$PULL_REQUEST_NUMBER is not mergeable… aborted."
+              echo "This error can be fixed by resolving the merge conflict with the main branch."
+              exit 1
+            fi
             echo "build_sha=$(echo ${RESPONSE} | jq -r .[0].merge_commit_sha)" >> $GITHUB_OUTPUT
             echo "checkout_ref=refs/pull/$(echo ${RESPONSE} | jq -r .[0].number)/merge" >> $GITHUB_OUTPUT
           else
