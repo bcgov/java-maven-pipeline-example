@@ -7,5 +7,6 @@ permissions: {}
 jobs:
   return-success-example:
     name: Sample Post-Deploy Always Success
+    runs-on: ubuntu-latest
     steps:
       - run: echo "This should succeed."
