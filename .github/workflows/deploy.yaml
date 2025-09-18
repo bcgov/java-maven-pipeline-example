@@ -386,5 +386,10 @@ jobs:
           BROKER_JWT: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
           GITHUB_RUN_ID: ${{ github.run_id }}
-      - name: Post-deploy Test
-        uses: ./.github/workflows/preflight.yaml
+  post-deploy-test:
+    name: Post-deploy test
+    needs: submit-deployment-job
+    runs-on: ubuntu-latest
+    uses: ./.github/workflows/preflight.yaml
+    secrets:
+      token: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
