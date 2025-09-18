@@ -1,10 +1,10 @@
-name: Run java-maven-pipeline-example Deploy
+name: 'Deploy pipeline - java-maven-pipeline-example'
 
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Target environment (dev, test, prod)'
+        description: 'Deploy artifact from previous selection until this environment'
         required: true
         type: choice
         options:
@@ -12,7 +12,7 @@ on:
           - test
           - production
       config_branch:
-        description: 'Use branch for testing configuration changes'
+        description: 'Use playbook folder from different branch (optional)'
         required: false
         type: string
 
@@ -23,16 +23,16 @@ permissions:
   pull-requests: read
 
 jobs:
-  check-token-expiration:
-    name: Check token expiration
-    uses: ./.github/workflows/check-token.yaml
+  preflight:
+    name: Preflight
+    uses: ./.github/workflows/preflight.yaml
     secrets:
       token: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
 
   deploy-development:
     name: Deploy to development
     uses: ./.github/workflows/deploy.yaml
-    needs: check-token-expiration
+    needs: preflight
     with:
       environment: development
       config_branch: ${{ github.event.inputs.config_branch }}
@@ -53,7 +53,7 @@ jobs:
     if: |
       github.event.inputs.environment == 'test' ||
       github.event.inputs.environment == 'production'
- 
+
   deploy-production:
     name: Deploy to production
     needs: deploy-test
