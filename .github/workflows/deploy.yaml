@@ -389,6 +389,4 @@ jobs:
   post-deploy-test:
     name: Post-deploy test
     needs: submit-deployment-job
-    uses: ./.github/workflows/preflight.yaml
-    secrets:
-      token: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
+    uses: ./.github/workflows/success.yaml
