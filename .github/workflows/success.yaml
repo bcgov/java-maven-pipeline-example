@@ -7,4 +7,5 @@ permissions: {}
 jobs:
   return-success-example:
     name: Sample Post-Deploy Always Success
-    run: echo "This should succeed."
+    steps:
+      - run: echo "This should succeed."
