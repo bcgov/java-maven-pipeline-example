@@ -389,5 +389,8 @@ jobs:
   post-deploy-test:
     name: Post-deploy test
     permissions: {}
+    if: |
+      always() &&
+      needs.submit-deployment-job.result == success
     needs: submit-deployment-job
     uses: ./.github/workflows/success.yaml
