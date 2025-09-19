@@ -1,0 +1,19 @@
+name: Post-Deploy Always Failure
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+permissions: {}
+
+jobs:
+  return-failure-example:
+    name: Sample Post-Deploy Always Failure
+    runs-on: ubuntu-latest
+    steps:
+      - name: "test failure"
+        run: |
+          echo "This should fail."
+          exit 1

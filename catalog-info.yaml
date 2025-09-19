@@ -27,5 +27,6 @@ metadata:
     playbook.io.nrs.gov.bc.ca/deployJasperReports: false
     playbook.io.nrs.gov.bc.ca/configureNrArtifactory: false
     playbook.io.nrs.gov.bc.ca/mavenBuildCommand: --batch-mode -Dmaven.test.skip=true -Pgithub deploy --file ./pom.xml
+    playbook.io.nrs.gov.bc.ca/postDeployTestsPath: ./.github.workflows/failure.yaml
 apiVersion: backstage.io/v1alpha1
 kind: Component
