@@ -388,5 +388,6 @@ jobs:
           GITHUB_RUN_ID: ${{ github.run_id }}
   post-deploy-test:
     name: Post-deploy test
+    permissions: {}
     needs: submit-deployment-job
     uses: ./.github/workflows/success.yaml
