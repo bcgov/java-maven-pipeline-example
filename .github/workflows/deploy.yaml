@@ -393,6 +393,6 @@ jobs:
       always() &&
       needs.submit-deployment-job.result == 'success'
     needs: submit-deployment-job
-    uses: ./.github.workflows/failure.yaml
+    uses: ./.github/workflows/failure.yaml
     with:
       environment: ${{ inputs.environment }}
