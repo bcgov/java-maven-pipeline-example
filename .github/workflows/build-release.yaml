@@ -50,10 +50,12 @@ jobs:
             RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=bcgov:${{ github.head_ref || github.ref_name }}&state=open&base=main" \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json")
+            echo "PR Response 1: $RESPONSE"
             PULL_REQUEST_NUMBER=$(echo "${RESPONSE}" | jq -r .[0].number)
             RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls/$PULL_REQUEST_NUMBER" \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json")
+            echo "PR Response 2: $RESPONSE"
             if [[ -z "$RESPONSE" || "$RESPONSE" == "null" || "$RESPONSE" == "[]" || "$RESPONSE" == "[ ]" ]]; then
               echo "checkout_ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
               echo "version_modifier=${{ github.ref_name }}" >> $GITHUB_OUTPUT
