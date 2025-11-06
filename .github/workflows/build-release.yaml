@@ -51,15 +51,15 @@ jobs:
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json")
             echo "PR Response 1: $RESPONSE"
-            PULL_REQUEST_NUMBER=$(echo "${RESPONSE}" | jq -r .[0].number)
-            RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls/$PULL_REQUEST_NUMBER" \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github+json")
-            echo "PR Response 2: $RESPONSE"
-            if [[ -z "$RESPONSE" || "$RESPONSE" == "null" || "$RESPONSE" == "[]" || "$RESPONSE" == "[ ]" ]]; then
+            if [[ -z "$RESPONSE" || "$RESPONSE" == "null" || $(echo "$RESPONSE" | jq -e '. | length' 2>/dev/null) -eq 0 ]]; then
               echo "checkout_ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
               echo "version_modifier=${{ github.ref_name }}" >> $GITHUB_OUTPUT
             else
+              PULL_REQUEST_NUMBER=$(echo "${RESPONSE}" | jq -r .[0].number)
+              RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls/$PULL_REQUEST_NUMBER" \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github+json")
+
               MERGEABLE=$(echo "${RESPONSE}" | jq -r .mergeable)
               if [[ "$MERGEABLE" != "true" ]]; then
                 echo "::error ::Pull request #$PULL_REQUEST_NUMBER is not mergeable… aborted."
