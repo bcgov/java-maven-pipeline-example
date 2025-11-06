@@ -46,7 +46,7 @@ jobs:
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
             echo "checkout_ref=${{ github.ref }}" >> $GITHUB_OUTPUT
             echo "version_modifier=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          elif [[ ${{ github.ref_name != 'main' }} = true ]]; then
+          else [[ ${{ github.ref_name != 'main' }} = true ]]; then
             RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=bcgov:${{ github.head_ref || github.ref_name }}&state=open&base=main" \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json")
@@ -54,17 +54,20 @@ jobs:
             RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls/$PULL_REQUEST_NUMBER" \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json")
-            MERGEABLE=$(echo "${RESPONSE}" | jq -r .mergeable)
-            if [[ "$MERGEABLE" != "true" ]]; then
-              echo "::error ::Pull request #$PULL_REQUEST_NUMBER is not mergeable… aborted."
-              echo "This can be resolved by resolving the merge conflict with the main branch."
-              exit 1
+            if [[ -z "$RESPONSE" || "$RESPONSE" == "null" ]]; then
+              echo "checkout_ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+              echo "version_modifier=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            else
+              MERGEABLE=$(echo "${RESPONSE}" | jq -r .mergeable)
+              if [[ "$MERGEABLE" != "true" ]]; then
+                echo "::error ::Pull request #$PULL_REQUEST_NUMBER is not mergeable… aborted."
+                echo "This can be resolved by resolving the merge conflict with the main branch."
+                exit 1
+              fi
+              echo "checkout_ref=refs/pull/$PULL_REQUEST_NUMBER/merge" >> $GITHUB_OUTPUT
+              echo "version_modifier=$PULL_REQUEST_NUMBER" >> $GITHUB_OUTPUT
             fi
-            echo "checkout_ref=refs/pull/$PULL_REQUEST_NUMBER/merge" >> $GITHUB_OUTPUT
-            echo "version_modifier=$PULL_REQUEST_NUMBER" >> $GITHUB_OUTPUT
-          else
-            echo "checkout_ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-            echo "version_modifier=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          
           fi
       - name: Checkout repository
         uses: actions/checkout@v4
