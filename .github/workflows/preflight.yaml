@@ -14,3 +14,11 @@ jobs:
     uses: ./.github/workflows/check-token.yaml
     secrets:
       token: ${{ secrets.token }}
+  echo-vars:
+    name: echo variables
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo Variables
+        run: |
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Action: ${{ github.action }}"
