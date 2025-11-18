@@ -9,6 +9,7 @@ jobs:
     name: Check build artifact
     steps:
       - name: Check build artifact
+        runs-on: ubuntu-latest
         shell: bash
         run: |
           RESPONSE=$(curl -s "curl -s https://api.github.com/repos/bcgov/java-maven-pipeline-example/actions/workflows/build-release.yaml/runs?head_sha=${{ github.sha }}&branch=${{ github.ref_name }}")
