@@ -12,7 +12,9 @@ jobs:
       - name: Check build artifact
         shell: bash
         run: |
-          RESPONSE=$(curl -s "curl -s https://api.github.com/repos/bcgov/java-maven-pipeline-example/actions/workflows/build-release.yaml/runs?head_sha=${{ github.sha }}&branch=${{ github.ref_name }}")
+          RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/actions/workflows/build-release.yaml/runs?head_sha=${{ github.sha }}&branch=${{ github.ref_name }}" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json")
           { read -r BUILD_ACTION_STATUS; read -r BUILD_ACTION_URL; } < <(jq -r '.workflow_runs | sort_by(.run_number) | reverse | .[0] | .conclusion, .html_url' <<< "$RESPONSE")
           echo "Found Build action url: $BUILD_ACTION_URL"
           if [[ "$BUILD_ACTION_STATUS" != "success" ]]; then
