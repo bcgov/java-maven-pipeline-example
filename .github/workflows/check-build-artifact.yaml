@@ -1,0 +1,20 @@
+name: Check build artifact
+
+on:
+  workflow_call:
+permissions: {}
+
+jobs:
+  check-build-artifact:
+    name: Check build artifact
+    steps:
+      - name: Check build artifact
+        shell: bash
+        run: |
+          RESPONSE=$(curl -s "curl -s https://api.github.com/repos/bcgov/java-maven-pipeline-example/actions/workflows/build-release.yaml/runs?head_sha=${{ github.sha }}&branch=${{ github.ref_name }}")
+          { read -r BUILD_ACTION_STATUS; read -r BUILD_ACTION_URL; } < <(jq -r '.workflow_runs | sort_by(.run_number) | reverse | .[0] | .conclusion, .html_url' <<< "$RESPONSE")
+          echo "Found Build action url: $BUILD_ACTION_URL"
+          if [[ "$BUILD_ACTION_STATUS" != "success" ]]; then
+            echo "::error ::Last 'Build and publish - java-maven-pipeline-example' was not "success" or does not exist."
+            echo "This error can be resolved by making sure the most recent 'Build and publish - java maven-pipeline-example' action is successful using the ${{ github.ref_name }} branch with the ${{ github.sha }} commit hash.
+          fi
