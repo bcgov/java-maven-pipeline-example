@@ -19,5 +19,5 @@ jobs:
           echo "Found Build action url: $BUILD_ACTION_URL"
           if [[ "$BUILD_ACTION_STATUS" != "success" ]]; then
             echo "::error ::Last 'Build and publish - java-maven-pipeline-example' was not 'success' or does not exist."
-            echo "This error can be resolved by making sure the most recent 'Build and publish - java maven-pipeline-example' action is successful using the ${{ github.ref_name }} branch with the ${{ github.sha }} commit hash.
+            echo "This error can be resolved by making sure the most recent 'Build and publish - java maven-pipeline-example' action is successful using the ${{ github.ref_name }} branch with the ${{ github.sha }} commit hash."
           fi
