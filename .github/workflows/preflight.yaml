@@ -18,3 +18,10 @@ jobs:
     name: Check build artifact
     uses: ./.github/workflows/check-build-artifact.yaml
     if: github.workflow == 'Deploy pipeline - java-maven-pipeline-example'
+
+  check-release-package:
+    name: Check release package
+    uses: ./.github/workflows/check-release-package.yaml
+    secrets:
+      token: ${{ secrets.token }}
+    if: ${{ github.ref_type == 'tag' }}
