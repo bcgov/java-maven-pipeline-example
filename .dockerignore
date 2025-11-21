@@ -1,0 +1,15 @@
+target
+!target/*.war
+*.iml
+.git
+.gitignore
+.idea
+.vscode
+node_modules
+**/__pycache__
+.DS_Store
+*.log
+.settings
+
+# Exclude local maven repository if accidentally present
+.m2
