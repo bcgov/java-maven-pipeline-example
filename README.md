@@ -22,14 +22,23 @@ This repository demonstrates how to package a Java web application (WAR) and run
 ### **Using Podman (Recommended for Local Development)**
 Run:
 ```sh
-./build.sh podman
+./build.sh --engine podman
+```
+or
+```sh
+./build.sh --engine=podman
 ```
 
 ### **Using Docker**
 Run:
 ```sh
-./build.sh docker
+./build.sh --engine docker
 ```
+or
+```sh
+./build.sh --engine=docker
+```
+
 This performs the same build process using Docker.
 
 ---
