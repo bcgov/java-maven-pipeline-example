@@ -30,6 +30,11 @@ jobs:
     uses: ./.github/workflows/check-token.yaml
     secrets:
       token: ${{ secrets.token }}
+      
+  check-build-artifact:
+    name: Check build artifact
+    uses: ./.github/workflows/check-build-artifact.yaml
+    if: github.workflow == 'Deploy pipeline - java-maven-pipeline-example'
 
   check-release-package:
     name: Check release package
