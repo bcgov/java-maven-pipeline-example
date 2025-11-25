@@ -3,23 +3,49 @@
 # Exit on error
 set -e
 
-# Check arguments
-if [ $# -lt 1 ]; then
-  echo "Usage: $0 [docker|podman]"
+# Parse arguments
+ENGINE="podman"
+POM_PATH="./pom.xml"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --engine=*)
+      ENGINE="${1#*=}"
+      shift
+      ;;
+    --engine)
+      ENGINE="$2"
+      shift 2
+      ;;
+    --pom=*)
+      POM_PATH="${1#*=}"
+      shift
+      ;;
+    --pom)
+      POM_PATH="$2"
+      shift 2
+      ;;
+    *)
+      echo "Usage: $0 --engine=[docker|podman] [--pom=path/to/pom.xml]"
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z "$ENGINE" ]]; then
+  echo "Error: --engine argument is required (docker or podman)"
+  exit 1
+fi
+
+if [[ "$ENGINE" != "docker" && "$ENGINE" != "podman" ]]; then
+  echo "Error: ENGINE must be 'docker' or 'podman'"
   exit 1
 fi
 
 # Source environment variables
 source .docker/setenv.sh
 
-ENGINE=$1
 MAVEN_IMAGE=maven:3.9.11-amazoncorretto-17
-
-# Validate engine
-if [[ "$ENGINE" != "docker" && "$ENGINE" != "podman" ]]; then
-  echo "Error: ENGINE must be 'docker' or 'podman'"
-  exit 1
-fi
 
 # Build command template
 BUILD_CMD="$ENGINE run --rm \
@@ -29,7 +55,7 @@ BUILD_CMD="$ENGINE run --rm \
   -e ARTIFACTORY_USERNAME=${ARTIFACTORY_USERNAME} \
   -e ARTIFACTORY_PASSWORD=${ARTIFACTORY_PASSWORD} \
   ${MAVEN_IMAGE} \
-  mvn -B -DskipTests package"
+  mvn -B -DskipTests -f \"${POM_PATH}\" package"
 
 # Run the build
 echo "Running build with $ENGINE..."
