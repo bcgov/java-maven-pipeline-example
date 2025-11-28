@@ -24,7 +24,8 @@ jobs:
   preflight:
     name: Preflight
     uses: ./.github/workflows/preflight.yaml
-    permissions: {}
+    permissions:
+      contents: read
     with:
       release_check: true
       catalog_info: catalog-info.yaml
