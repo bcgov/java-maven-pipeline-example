@@ -16,7 +16,8 @@ on:
       token:
         description: "The Broker token"
         required: true
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   check-release-package:
@@ -38,7 +39,6 @@ jobs:
             exit 1
           fi
           echo "Catalog file found: ${{ inputs.catalog_info }}"
-          cat "${{ inputs.catalog_info }}"
 
       - name: Extract Version From Tag
         id: tag
