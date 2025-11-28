@@ -51,6 +51,7 @@ MAVEN_IMAGE=maven:3.9.11-amazoncorretto-17
 BUILD_CMD="$ENGINE run --rm \
   -v ${PWD}:/workspace \
   -w /workspace \
+  -v ~/.m2:/root/.m2 \
   -v $(pwd)/.github/polaris-maven-settings.xml:/root/.m2/settings.xml:ro \
   -e ARTIFACTORY_USERNAME=${ARTIFACTORY_USERNAME} \
   -e ARTIFACTORY_PASSWORD=${ARTIFACTORY_PASSWORD} \
