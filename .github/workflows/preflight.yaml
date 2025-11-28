@@ -7,21 +7,16 @@ on:
         description: "The Broker token"
         required: true
     inputs:
+      catalog_info:
+        description: "The catalog file"
+        type: string
+        default: "catalog-info.yaml"
+        required: false
       release_check:
         description: "Whether to run the release package check"
         required: false
         default: false
         type: boolean
-      project_name:
-        description: "The project name"
-        type: string
-        default: ""
-        required: false
-      service_name:
-        description: "The service name"
-        type: string
-        default: ""
-        required: false
 permissions: {}
 
 jobs:
@@ -30,7 +25,7 @@ jobs:
     uses: ./.github/workflows/check-token.yaml
     secrets:
       token: ${{ secrets.token }}
-      
+  
   check-build-artifact:
     name: Check build artifact
     uses: ./.github/workflows/check-build-artifact.yaml
@@ -42,6 +37,5 @@ jobs:
     secrets:
       token: ${{ secrets.token }}
     with:
-      service_name: ${{ inputs.service_name }}
-      project_name: ${{ inputs.project_name }}
+      catalog_info: ${{ inputs.catalog_info }}
     if: ${{ inputs.release_check == true && github.ref_type == 'tag' }}
