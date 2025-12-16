@@ -16,7 +16,8 @@ on:
       token:
         description: "The Broker token"
         required: true
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   check-release-package:
@@ -25,12 +26,12 @@ jobs:
 
     steps:
       - name: Checkout only catalog-info.yaml
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             ${{ inputs.catalog_info }}
           sparse-checkout-cone-mode: false
-      
+
       - name: Verify catalog file exists
         run: |
           if [[ ! -f "${{ inputs.catalog_info }}" ]]; then
@@ -38,11 +39,15 @@ jobs:
             exit 1
           fi
           echo "Catalog file found: ${{ inputs.catalog_info }}"
-          cat "${{ inputs.catalog_info }}"
 
       - name: Extract Version From Tag
         id: tag
         run: |
+          # Exit successfully if not a tagged release
+          if [[ ! "$GITHUB_REF" =~ ^refs/tags/ ]]; then
+            echo "Not a tagged release, skipping check."
+            exit 0
+          fi
           # github.ref looks like "refs/tags/v1.2.3"
           TAG="${GITHUB_REF#refs/tags/}"
           VERSION="${TAG#v}"
