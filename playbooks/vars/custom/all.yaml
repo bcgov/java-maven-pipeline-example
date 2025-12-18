@@ -1,7 +1,7 @@
 # Use this file for custom variables related to your webapp
 # This is optional. The default is the latest.
 # tomcat_major_version: "8"
-tomcat_major_version: '9'
+tomcat_major_version: '10'
 skip_ojdbc_install: true
 
 # This is optional. The default is the latest of the major version.
