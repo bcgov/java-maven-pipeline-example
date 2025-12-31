@@ -40,16 +40,12 @@ if [[ "$ENGINE" != "docker" && "$ENGINE" != "podman" ]]; then
   echo "Error: ENGINE must be 'docker' or 'podman'"
   exit 1
 fi
-echo $POM_PATH
-
-#ARTIFACT_PATH=$(xq -r '(.project.groupId | gsub("\\.";"\/")) + "/" + .project.artifactId + "/" + .project.version' "$POM_PATH")
-#echo "Determined ARTIFACT_PATH: $ARTIFACT_PATH"
 
 PROJECT_DIR=$(dirname "$POM_PATH")
 echo "Determined PROJECT_DIR: $PROJECT_DIR"
 
 # Build command template
-BUILD_CMD="$ENGINE build --build-arg PROJECT_DIR="$PROJECT_DIR" \
+BUILD_CMD="$ENGINE build --build-arg PROJECT_DIR=\"$PROJECT_DIR\" \
   -f .docker/runtime/Dockerfile \
   -t myapp ."
 
