@@ -2,9 +2,10 @@
 # Runtime Stage: Tomcat + WAR
 # -------------------------------
 ARG RUNTIME_IMAGE=tomcat:9-jre17
-ARG PROJECT_DIR=.
 
 FROM ${RUNTIME_IMAGE} AS runtime
+
+ARG PROJECT_DIR=.
 ARG PORT=8080
 ARG USER_ID=1000
 ARG GROUP_ID=1000

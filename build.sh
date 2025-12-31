@@ -53,10 +53,11 @@ BUILD_CMD="$ENGINE run --rm \
   -w /workspace \
   -v ~/.m2:/root/.m2 \
   -v $(pwd)/.github/polaris-maven-settings.xml:/root/.m2/settings.xml:ro \
+  -v $(pwd)/.m2repo:/m2repo \
   -e ARTIFACTORY_USERNAME=${ARTIFACTORY_USERNAME} \
   -e ARTIFACTORY_PASSWORD=${ARTIFACTORY_PASSWORD} \
   ${MAVEN_IMAGE} \
-  mvn -B -DskipTests -f \"${POM_PATH}\" package"
+  mvn -B -DskipTests -Dmaven.repo.local=/m2repo -f \"${POM_PATH}\" install"
 
 # Run the build
 echo "Running build with $ENGINE..."

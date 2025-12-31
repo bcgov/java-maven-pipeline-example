@@ -10,17 +10,46 @@ if [ $# -lt 1 ]; then
 fi
 
 ENGINE=$1
+shift
+
+POM_PATH="./pom.xml"
 IMAGE_NAME="myapp"
 PORT=${PORT:-8080}
+
+# Parse optional flags (only --pom supported)
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --pom=*)
+      POM_PATH="${1#*=}"
+      shift
+      ;;
+    --pom)
+      POM_PATH="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 ENGINE [--pom=path/to/pom.xml]"
+      exit 1
+      ;;
+  esac
+done
 
 # Validate engine
 if [[ "$ENGINE" != "docker" && "$ENGINE" != "podman" ]]; then
   echo "Error: ENGINE must be 'docker' or 'podman'"
   exit 1
 fi
+echo $POM_PATH
+
+#ARTIFACT_PATH=$(xq -r '(.project.groupId | gsub("\\.";"\/")) + "/" + .project.artifactId + "/" + .project.version' "$POM_PATH")
+#echo "Determined ARTIFACT_PATH: $ARTIFACT_PATH"
+
+PROJECT_DIR=$(dirname "$POM_PATH")
+echo "Determined PROJECT_DIR: $PROJECT_DIR"
 
 # Build command template
-BUILD_CMD="$ENGINE build \
+BUILD_CMD="$ENGINE build --build-arg PROJECT_DIR="$PROJECT_DIR" \
   -f .docker/runtime/Dockerfile \
   -t myapp ."
 
