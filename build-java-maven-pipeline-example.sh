@@ -42,8 +42,10 @@ if [[ "$ENGINE" != "docker" && "$ENGINE" != "podman" ]]; then
   exit 1
 fi
 
+PROJECT_NAME="oscar-example"
+SERVICE_NAME="java-maven-pipeline-example"
 # Source environment variables
-source .docker/setenv.sh
+source .docker/setenv.sh ${PROJECT_NAME} ${SERVICE_NAME}
 
 MAVEN_IMAGE=maven:3.9.11-amazoncorretto-17
 
@@ -58,6 +60,9 @@ BUILD_CMD="$ENGINE run --rm \
   -e ARTIFACTORY_PASSWORD=${ARTIFACTORY_PASSWORD} \
   ${MAVEN_IMAGE} \
   mvn -B -DskipTests -Dmaven.repo.local=/m2repo -f \"${POM_PATH}\" install"
+
+# Determine project directory from POM
+PROJECT_DIR=$(dirname "$POM_PATH")
 
 # Run the build
 echo "Running build with $ENGINE..."
