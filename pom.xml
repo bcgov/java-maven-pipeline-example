@@ -80,7 +80,6 @@
         <configuration>
           <source>21</source>          <!-- Java 21 LTS compatible -->
           <target>21</target>          <!-- Java 21 LTS compatible -->
-          <release>21</release>        <!-- Explicitly set release version -->
         </configuration>
       </plugin>
 
