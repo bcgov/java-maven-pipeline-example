@@ -42,8 +42,11 @@ if [[ "$ENGINE" != "docker" && "$ENGINE" != "podman" ]]; then
   exit 1
 fi
 
+PROJECT_DIR=$(dirname "$POM_PATH")
+echo "Determined PROJECT_DIR: $PROJECT_DIR"
+
 # Source environment variables
-source .docker/setenv.sh
+source $PROJECT_DIR/.docker/setenv.sh ${PROJECT_NAME} ${SERVICE_NAME}
 
 MAVEN_IMAGE=maven:3.9.11-amazoncorretto-17
 

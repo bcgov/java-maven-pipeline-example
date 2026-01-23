@@ -12,4 +12,4 @@ node_modules
 .settings
 
 # Exclude local maven repository if accidentally present
-.m2
+

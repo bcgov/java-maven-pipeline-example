@@ -10,7 +10,11 @@ if [ $# -lt 1 ]; then
 fi
 
 ENGINE=$1
-IMAGE_NAME="myapp"
+shift
+
+POM_PATH="./pom.xml"
+IMAGE_NAME="java-maven-pipeline-example-image"
+CONTAINER_NAME="java-maven-pipeline-example-app"
 PORT=${PORT:-8080}
 
 # Validate engine
@@ -20,9 +24,9 @@ if [[ "$ENGINE" != "docker" && "$ENGINE" != "podman" ]]; then
 fi
 
 # Build command template
-BUILD_CMD="$ENGINE build \
-  -f .docker/runtime/Dockerfile \
-  -t myapp ."
+BUILD_CMD="$ENGINE build --build-arg PROJECT_DIR=\"$PROJECT_DIR\" \
+  -f $PROJECT_DIR/.docker/runtime/Dockerfile \
+  -t $IMAGE_NAME ."
 
 # Run the build
 echo "Running build with $ENGINE..."
@@ -33,9 +37,9 @@ echo "Build completed using $ENGINE."
 # Run command template
 RUN_CMD="$ENGINE run -d\
   -p ${PORT}:${PORT} \
-  --name myapp \
+  --name $CONTAINER_NAME \
   --replace \
-  myapp"
+  $IMAGE_NAME"
 
 # Run app
 echo "Running image '$IMAGE_NAME'..."
