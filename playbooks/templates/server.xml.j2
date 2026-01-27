@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Server port="-1" shutdown="SHUTDOWN">
+    <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
+    <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
+    <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
+
+    <GlobalNamingResources>
+
+    </GlobalNamingResources>
+
+    <Service name="Catalina">
+        <Connector port="{{ tomcat_https_port }}"
+                   protocol="org.apache.coyote.http11.Http11NioProtocol"
+                   maxThreads="150"
+                   connectionTimeout="130000"
+                   SSLEnabled="true"
+                   scheme="https"
+                   secure="true">
+
+            <!--
+                Tomcat 10 SSL Configuration (Nested)
+                The SSLHostConfig is placed inside the Connector.
+                The 'clientAuth' attribute is now 'certificateVerification'.
+            -->
+            <SSLHostConfig sslProtocol="TLS"
+                           certificateVerification="none"
+                           ciphers="TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P521,
+                                    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384,
+                                    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P256,
+                                    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA_P521,
+                                    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA_P384,
+                                    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA_P256,
+                                    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P521,
+                                    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P384,
+                                    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256,
+                                    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA_P521,
+                                    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA_P384,
+                                    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA_P256,
+                                    TLS_RSA_WITH_AES_256_GCM_SHA384,
+                                    TLS_RSA_WITH_AES_128_GCM_SHA256,
+                                    TLS_RSA_WITH_AES_256_CBC_SHA256,
+                                    TLS_RSA_WITH_AES_256_CBC_SHA,
+                                    TLS_RSA_WITH_AES_128_CBC_SHA256,
+                                    TLS_RSA_WITH_AES_128_CBC_SHA">
+                <Certificate
+                        certificateKeystoreFile="{{ tomcat_keystore_file }}"
+                        certificateKeystorePassword="{{ tomcat_keystore_pass }}"
+                        type="RSA"
+                        keystoreType="JKS" />
+            </SSLHostConfig>
+        </Connector>
+
+        <Engine name="Catalina" defaultHost="localhost">
+            <Realm className="org.apache.catalina.realm.LockOutRealm" />
+
+            <Host name="localhost"
+                  appBase="{{ polaris_apps_service_install_home }}/webapps"
+                  unpackWARs="true"
+                  autoDeploy="true"
+                  deployOnStartup="true"
+                  deployXML="true"
+                  workDir="/apps_data/APT2/apt2-war/tomcat/work" >
+                
+                <Valve className="org.apache.catalina.valves.AccessLogValve"
+                       directory="{{ tomcat_log_dir }}"
+                       prefix="{{ tomcat_access_log_prefix }}"
+                       suffix="{{ tomcat_access_log_extension }}"
+                       pattern="{{ tomcat_access_log_pattern }}" />
+            </Host>
+        </Engine>
+    </Service>
+</Server>

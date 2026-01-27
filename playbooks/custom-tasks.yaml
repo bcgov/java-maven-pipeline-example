@@ -1,0 +1,14 @@
+---
+- name: configure nonstandard files
+  template:
+    src: "{{ playbook_dir }}/templates/{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0775"
+  become: yes
+  become_user: "{{ polaris_install_user }}"
+  with_items:
+    - {
+      src: "server.xml.j2",
+      dest: "{{ polaris_apps_service_install_home }}/tomcat/conf/server.xml"
+    }
+
