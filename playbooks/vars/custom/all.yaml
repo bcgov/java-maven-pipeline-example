@@ -2,8 +2,6 @@
 # This is optional. The default is the latest.
 # tomcat_major_version: "8"
 tomcat_major_version: '10'
-# jdk_major_version: '21'
-jdk_pinned_release_name: 'jdk-21.0.9+10'
 skip_ojdbc_install: true
 
 # This is optional. The default is the latest of the major version.
