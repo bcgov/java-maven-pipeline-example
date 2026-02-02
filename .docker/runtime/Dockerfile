@@ -1,7 +1,7 @@
 # -------------------------------
 # Runtime Stage: Tomcat + WAR
 # -------------------------------
-ARG RUNTIME_IMAGE=tomcat:9-jre17
+ARG RUNTIME_IMAGE=tomcat:10-jre17
 ARG PROJECT_DIR=.
 
 FROM ${RUNTIME_IMAGE} AS runtime
