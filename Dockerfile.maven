@@ -1,0 +1,10 @@
+ARG TOMCAT_VERSION=10.1-jdk21-temurin-noble
+FROM tomcat:${TOMCAT_VERSION}
+
+RUN apt-get update && apt-get install -y maven && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY entrypoint-curl.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+EXPOSE 8080
+ENTRYPOINT ["/entrypoint.sh"]
