@@ -22,7 +22,3 @@ export SERVICE_NAME="java-maven-pipeline-example"
 # Maven build configuration
 export POM_ROOT="./"
 export MAVEN_ARGS="--file $POM_ROOT"
-
-# Only fetch vault secrets if --skip-vault is not set
-if [[ "$SKIP_VAULT" == false ]]; then
-fi
