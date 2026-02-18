@@ -22,3 +22,4 @@ export SERVICE_NAME="java-maven-pipeline-example"
 # Maven build configuration
 export POM_ROOT="./"
 export MAVEN_ARGS="--file $POM_ROOT"
+
