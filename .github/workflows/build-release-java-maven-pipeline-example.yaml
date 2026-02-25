@@ -144,10 +144,14 @@ jobs:
         working-directory: ./
         run: |
           ARTIFACT_NAME="${ARTIFACT_ID}-${PROJECT_VERSION}.${PACKAGE_TYPE}"
-          mvn --batch-mode -Dmaven.test.skip=true -Pgithub deploy --file ./pom.xml
+          source ./env.sh build ./ --skip-vault
+          ./mvnw --batch-mode -Dmaven.test.skip=true -Pgithub clean deploy
+          cd ./
           echo "artifact_sha256=$(sha256sum ./target/${ARTIFACT_NAME} | awk '{ print $1 }')" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
+          ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
           PROJECT_VERSION: ${{ steps.set-build-output-parameters.outputs.project_version }}
           ARTIFACT_ID: ${{ steps.set-build-output-parameters.outputs.artifact_id }}
           PACKAGE_TYPE: ${{ steps.set-build-output-parameters.outputs.package_type }}
