@@ -387,4 +387,4 @@ jobs:
           BROKER_URL: https://broker.io.nrs.gov.bc.ca
           BROKER_JWT: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
-          GITHUB_RUN_ID: ${{ steps.submit-job.outputs.trigger_uuid }}
+          TRIGGER_UUID: ${{ steps.submit-job.outputs.trigger_uuid }}
