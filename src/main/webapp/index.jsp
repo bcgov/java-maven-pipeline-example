@@ -1,21 +1,12 @@
 <%@ page import="java.io.InputStream" %>
-<%@ page import="javax.xml.parsers.DocumentBuilderFactory" %>
-<%@ page import="javax.xml.xpath.XPath" %>
-<%@ page import="javax.xml.xpath.XPathConstants" %>
-<%@ page import="javax.xml.xpath.XPathFactory" %>
-<%@ page import="org.w3c.dom.Document" %>
-<%@ page import="org.w3c.dom.Node" %>
+<%@ page import="java.util.Properties" %>
 <%
     String version = "N/A";
-    try (InputStream input = getServletContext().getResourceAsStream("/META-INF/maven/bcgov.example/java-maven-pipeline-example/pom.xml")) {
+    try (InputStream input = getServletContext().getResourceAsStream("/META-INF/maven/bcgov.example/java-maven-pipeline-example/pom.properties")) {
         if (input != null) {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            Document doc = factory.newDocumentBuilder().parse(input);
-            XPath xpath = XPathFactory.newInstance().newXPath();
-            Node versionNode = (Node) xpath.evaluate("/project/version", doc, XPathConstants.NODE);
-            if (versionNode != null) {
-                version = versionNode.getTextContent();
-            }
+            Properties props = new Properties();
+            props.load(input);
+            version = props.getProperty("version", "N/A");
         }
     } catch (Exception e) {
         e.printStackTrace();
