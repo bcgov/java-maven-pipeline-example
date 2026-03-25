@@ -120,11 +120,22 @@ source env.sh local
 source env.sh build --skip-vault
 ```
 
+
 #### Setting the Artifact Version
 
-The `pom.xml` uses a user-defined `${app.version}` property for the project version. A profile named `version-from-env` activates automatically when the `VERSION` environment variable is present and sets `app.version` to its value. When the variable is absent the POM uses a sentinel default (`UNSET`) so a bare `./mvnw` invocation produces a clearly invalid version rather than a stale hardcoded one. No extra plugins are required — Maven resolves plain user-defined properties in `<version>` natively at install/deploy time.
+The `pom.xml` uses a user-defined `${app.version}` property for the project version.
 
-The `VERSION` file in the project root is the single source of truth for the base version. `.env-build.sh` reads it via `cat VERSION` as its fallback, so local builds and the pipeline always derive the base from the same place. This approach works with any build tool, not just Maven.
+A profile named `version-from-env` activates automatically when the `VERSION` environment variable is present and sets `app.version` to its value.
+
+When the variable is absent, the POM uses a sentinel default (`UNSET`), so a bare `./mvnw` invocation produces a clearly invalid version rather than a stale hardcoded one.
+
+No extra plugins are required — Maven resolves plain user-defined properties in `<version>` natively at install/deploy time.
+
+For projects with a single component, the `VERSION` file in the project root is the single source of truth for the base version.
+
+For projects with multiple components (monorepos), a separate `VERSION` file exists in the root directory for each component.
+
+`.env-build.sh` reads it via `cat VERSION` as its fallback, so local builds and the pipeline always derive the base from the same place.
 
 | Context | Version resolved |
 |---|---|

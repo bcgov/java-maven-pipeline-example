@@ -18,15 +18,16 @@ fi
 # Service-specific environment variables
 export PROJECT_NAME="oscar-example"
 export SERVICE_NAME="java-maven-pipeline-example"
+export PACKAGE_REPO="https://maven.pkg.github.com/bcgov/java-maven-pipeline-example"
 
 # Maven build configuration
 export POM_ROOT="./"
 export MAVEN_ARGS="--file $POM_ROOT"
 
-# Artifact version — single source of truth is the VERSION file in the project root.
+# Artifact version — single source of truth is the VERSION file in the pom root.
 # Override by setting VERSION before sourcing env.sh (e.g. in CI); otherwise
 # the default is read directly from VERSION so the two never drift.
-export VERSION="${VERSION:-$(cat ${POM_ROOT}VERSION)}"
+export VERSION="${VERSION:-$(cat VERSION)}"
 
 
 # Only fetch vault secrets if --skip-vault is not set
