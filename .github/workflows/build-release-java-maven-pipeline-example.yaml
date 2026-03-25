@@ -93,25 +93,24 @@ jobs:
           if [[ ${{ startsWith(github.ref, 'refs/pull/') }} = true ]]; then
             echo "branch=${{ github.head_ref }}" >> "$GITHUB_OUTPUT"
           fi
-      - name: Update pom.xml
-        id: update-repo
+      - name: Set VERSION
+        id: set-version
         shell: bash
         working-directory: ./
         run: |
           if [[ ${{ startsWith(github.ref, 'refs/tags/v') }} = true ]]; then
             TAG=${{ github.ref_name }}
-            VERSION=${TAG#v}
+            APP_VERSION=${TAG#v}
           else
-            VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --file ./pom.xml)
-            VERSION=${VERSION/%SNAPSHOT/${{ steps.lookup-pr-merge-ref.outputs.version_modifier }}-SNAPSHOT}
+            BASE_VERSION=$(cat VERSION)
+            APP_VERSION=${BASE_VERSION/%SNAPSHOT/${{ steps.lookup-pr-merge-ref.outputs.version_modifier }}-SNAPSHOT}
           fi
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          mvn versions:set -DnewVersion=${VERSION} --file ./pom.xml
+          echo "VERSION=${APP_VERSION}" >> $GITHUB_ENV
       - name: Set build output parameters
         id: set-build-output-parameters
         working-directory: ./
         run: |
-          echo "project_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --file ./pom.xml)" >> $GITHUB_OUTPUT
+          echo "project_version=${VERSION}" >> $GITHUB_OUTPUT
           echo "artifact_id=$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout --file ./pom.xml)" >> $GITHUB_OUTPUT
           echo "package_type=$(mvn help:evaluate -Dexpression=project.packaging -q -DforceStdout --file ./pom.xml)" >> $GITHUB_OUTPUT
           echo "git_commit=$(git rev-parse --verify HEAD)" >> $GITHUB_OUTPUT
@@ -143,11 +142,15 @@ jobs:
         id: publish-artifact
         working-directory: ./
         run: |
+          set -euo pipefail
           ARTIFACT_NAME="${ARTIFACT_ID}-${PROJECT_VERSION}.${PACKAGE_TYPE}"
-          mvn --batch-mode -Dmaven.test.skip=true -Pgithub deploy --file ./pom.xml
+          source ./env.sh build ./ --skip-vault
+          ./mvnw --batch-mode -Dmaven.test.skip=true -Pgithub clean deploy
           echo "artifact_sha256=$(sha256sum ./target/${ARTIFACT_NAME} | awk '{ print $1 }')" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
+          ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
           PROJECT_VERSION: ${{ steps.set-build-output-parameters.outputs.project_version }}
           ARTIFACT_ID: ${{ steps.set-build-output-parameters.outputs.artifact_id }}
           PACKAGE_TYPE: ${{ steps.set-build-output-parameters.outputs.package_type }}
