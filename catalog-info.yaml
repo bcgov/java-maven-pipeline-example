@@ -19,7 +19,7 @@ metadata:
     github.com/project-slug: "bcgov/java-maven-pipeline-example"
     playbook.io.nrs.gov.bc.ca/clientId: e985d455-b0ff-470b-8731-e004fcfac915
     license: Apache-2.0
-    composer.io.nrs.gov.bc.ca/generators: backstage,gh-maven-build,gh-tomcat-deploy-onprem
+    composer.io.nrs.gov.bc.ca/generators: backstage,gh-maven-build,gh-tomcat-deploy-onprem,nr-repository-composer
     playbook.io.nrs.gov.bc.ca/deployJasperReports: false
     playbook.io.nrs.gov.bc.ca/postDeployTestsPath: ""
     playbook.io.nrs.gov.bc.ca/javaVersion: "21"
