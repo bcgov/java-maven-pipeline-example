@@ -4,19 +4,11 @@
   <groupId>bcgov.example</groupId>
   <artifactId>java-maven-pipeline-example</artifactId>
   <packaging>war</packaging>
-  <version>${app.version}</version>
+  <version>${revision}</version>
   <name>java-maven-pipeline-example</name>
   <properties>
-    <maven.compiler.source>21</maven.compiler.source>
-    <maven.compiler.target>21</maven.compiler.target>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <!-- Sentinel: the real value is supplied by the VERSION environment variable
-         (set by env.sh from the VERSION file). Building without sourcing env.sh
-         will produce a clearly invalid version rather than a stale hardcoded one.
-         Maven resolves plain user-defined properties in <version> natively at
-         install/deploy time — no flatten-maven-plugin required. -->
-    <app.version>UNSET</app.version>
+    <revision>1.0.0-SNAPSHOT</revision>
+  </properties>
   </properties>
 
   <repositories>
