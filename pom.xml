@@ -95,8 +95,7 @@
 
   <profiles>
     <!-- Activated automatically when the VERSION environment variable is set.
-         Overrides the <app.version> sentinel so the POM version matches the env var,
-         which env.sh reads from the VERSION file. -->
+         Sets the revision to the VERSION environment variable (avoids having to modify the pom file for release versions) -->
     <profile>
       <id>version-from-env</id>
       <activation>
@@ -105,7 +104,7 @@
         </property>
       </activation>
       <properties>
-        <app.version>${env.VERSION}</app.version>
+        <revision>${env.VERSION}</revision>
       </properties>
     </profile>
     <profile>
