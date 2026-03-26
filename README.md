@@ -123,19 +123,13 @@ source env.sh build --skip-vault
 
 #### Setting the Artifact Version
 
-The `pom.xml` uses a user-defined `${app.version}` property for the project version.
+The `pom.xml` uses a `VERSION` environment variable and the `${revision}` property for the project version (see https://maven.apache.org/guides/mini/guide-maven-ci-friendly.html).
 
-A profile named `version-from-env` activates automatically when the `VERSION` environment variable is present and sets `app.version` to its value.
+A profile named `version-from-env` activates automatically when the `VERSION` environment variable is present and sets `${revision}` to its value.
 
-When the variable is absent, the POM uses a sentinel default (`UNSET`), so a bare `./mvnw` invocation produces a clearly invalid version rather than a stale hardcoded one.
+When the environment variable is absent, the POM uses the hardcoded value in the properties section.
 
-No extra plugins are required — Maven resolves plain user-defined properties in `<version>` natively at install/deploy time.
-
-For projects with a single component, the `VERSION` file in the project root is the single source of truth for the base version.
-
-For projects with multiple components (monorepos), a separate `VERSION` file exists in the root directory for each component.
-
-`.env-build.sh` reads it via `cat VERSION` as its fallback, so local builds and the pipeline always derive the base from the same place.
+The Flatten Maven Plugin is used for install / deploy as described in the official Maven CI Friendly guide.
 
 | Context | Version resolved |
 |---|---|

@@ -26,3 +26,6 @@ hs_err_pid*
 replay_pid*
 
 .vagrant/
+
+# flattened pom (used by flatten-maven-plugin)
+.flattened-pom.xml

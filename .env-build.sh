@@ -24,11 +24,8 @@ export PACKAGE_REPO="https://maven.pkg.github.com/bcgov/java-maven-pipeline-exam
 export POM_ROOT="./"
 export MAVEN_ARGS="--file $POM_ROOT"
 
-# Artifact version — single source of truth is the VERSION file in the pom root.
-# Override by setting VERSION before sourcing env.sh (e.g. in CI); otherwise
-# the default is read directly from VERSION so the two never drift.
-export VERSION="${VERSION:-$(cat VERSION)}"
-
+# Artifact version — Use VERSION environment variable if set, otherwise default to 0.0.0-SNAPSHOT
+export VERSION="${VERSION:-0.0.0-SNAPSHOT}"
 
 # Only fetch vault secrets if --skip-vault is not set
 if [[ "$SKIP_VAULT" == false ]]; then

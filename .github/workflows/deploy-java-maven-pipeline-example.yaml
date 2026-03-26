@@ -293,7 +293,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      # See: https://github.com/bcgov-nr/polaris-pipelines
+      # See: https://github.com/bcgov/nr-polaris-pipelines
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
@@ -348,9 +348,11 @@ jobs:
             echo "Error: No deployment approver found. Failing deployment."
             exit 1
           fi
+          TRIGGER_UUID=$(uuidgen)
+          echo "trigger_uuid=$TRIGGER_UUID" >> $GITHUB_OUTPUT
           curl \
           --data-urlencode "token=${{ secrets.JENKINS_TOKEN }}" \
-          --data-urlencode "githubRunId=${{ github.run_id }}" \
+          --data-urlencode "githubRunId=${TRIGGER_UUID}" \
           --data-urlencode "githubToken=${{ secrets.GITHUB_TOKEN }}" \
           --data-urlencode "brokerJwt=${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}" \
           --data-urlencode "artifactSha256=${ARTIFACT_SHA256}" \
@@ -372,15 +374,10 @@ jobs:
           BUILD_NUMBER: ${{ needs.deploy-pre-release-build.outputs.build_number || needs.deploy-release-build.outputs.build_number }}
           ARTIFACT_SHA256: ${{ needs.deploy-pre-release-build.outputs.artifact_sha256 || needs.deploy-release-build.outputs.artifact_sha256 }}
           DOWNLOAD_URL: ${{ needs.deploy-pre-release-build.outputs.download_url || needs.deploy-release-build.outputs.download_url }}
-      - name: Display Jenkins project page URL
+      - name: Display deployment job URL
         run: |
           DEPLOYMENT_JOB_URL="${{ env.URL }}/job/${{ env.SERVICE_PROJECT }}/job/${{ env.SERVICE_NAME }}/"
-          echo "::notice title=Jenkins Project::View all runs at ${DEPLOYMENT_JOB_URL}"
-      
-      - name: Display Jenkins run URL
-        if: steps.check-jenkins-job-status.outputs.event_url != ''
-        run: |
-          echo "::notice title=Jenkins Run::${{ steps.check-jenkins-job-status.outputs.event_url }}"
+          echo "Deployment job URL: ${DEPLOYMENT_JOB_URL}"
 
       - name: Wait for Jenkins deployment job to be triggered and completed
         id: check-jenkins-job-status
@@ -390,56 +387,4 @@ jobs:
           BROKER_URL: https://broker.io.nrs.gov.bc.ca
           BROKER_JWT: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-
-      - name: Job summary
-        if: always()
-        run: |
-          PROJECT_VERSION="${{ needs.deploy-pre-release-build.outputs.project_version || needs.deploy-release-build.outputs.project_version }}"
-          ARTIFACT_NAME="${{ needs.deploy-pre-release-build.outputs.artifact_name || needs.deploy-release-build.outputs.artifact_name }}"
-          ARTIFACT_SHA256="${{ needs.deploy-pre-release-build.outputs.artifact_sha256 || needs.deploy-release-build.outputs.artifact_sha256 }}"
-          DOWNLOAD_URL="${{ needs.deploy-pre-release-build.outputs.download_url || needs.deploy-release-build.outputs.download_url }}"
-
-          if [[ "${{ steps.check-jenkins-job-status.outcome }}" == "success" && -n "${{ steps.check-jenkins-job-status.outputs.event_url }}" ]]; then
-            STATUS_MSG="✅ **Success**: Deployment completed successfully"
-            STATUS_DETAIL=""
-          elif [[ "${{ steps.check-jenkins-job-status.outcome }}" == "success" && -z "${{ steps.check-jenkins-job-status.outputs.event_url }}" ]]; then
-            STATUS_MSG="⚠️ **Timeout**: Job did not complete within 5.5 minutes"
-            STATUS_DETAIL="> **Action Required**: The deployment job is still running in Jenkins. You must manually verify the job status and completion."
-          elif [[ -z "${{ steps.check-jenkins-job-status.outputs.status }}" ]]; then
-            STATUS_MSG="❌ **Failed**: Job was not triggered"
-            STATUS_DETAIL="The deployment job could not be triggered. This may indicate a broker connectivity issue."
-          else
-            STATUS_MSG="❌ **Failed**: Deployment job failed"
-            STATUS_DETAIL="Final status: \`${{ steps.check-jenkins-job-status.outputs.status }}\`"
-          fi
-
-          cat >> $GITHUB_STEP_SUMMARY << EOF
-          # Deployment Summary
-
-          ## Configuration
-
-          | Parameter | Value |
-          |---|---|
-          | **Service** | ${{ env.SERVICE_NAME }} |
-          | **Environment** | ${{ inputs.environment }} |
-          | **Version** | \`${PROJECT_VERSION}\` |
-          | **Artifact** | \`${ARTIFACT_NAME}\` |
-          | **Checksum (sha256)** | \`${ARTIFACT_SHA256}\` |
-          | **GitHub Run** | [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
-
-          ## Jenkins Links
-
-          - **Project Page**: [${{ env.SERVICE_NAME }}](${{ env.URL }}/job/${{ env.SERVICE_PROJECT }}/job/${{ env.SERVICE_NAME }}/)
-          $(if [[ -n "${{ steps.check-jenkins-job-status.outputs.event_url }}" ]]; then
-            echo "- **Job Run**: [View Details](${{ steps.check-jenkins-job-status.outputs.event_url }})"
-          else
-            echo "- **Job Run**: Not available"
-          fi)
-
-          ## Status
-
-          ${STATUS_MSG}
-
-          ${STATUS_DETAIL}
-          EOF
+          TRIGGER_UUID: ${{ steps.submit-job.outputs.trigger_uuid}}

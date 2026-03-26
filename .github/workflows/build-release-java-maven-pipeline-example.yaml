@@ -102,7 +102,7 @@ jobs:
             TAG=${{ github.ref_name }}
             APP_VERSION=${TAG#v}
           else
-            BASE_VERSION=$(cat VERSION)
+            BASE_VERSION=0.0.0-SNAPSHOT
             APP_VERSION=${BASE_VERSION/%SNAPSHOT/${{ steps.lookup-pr-merge-ref.outputs.version_modifier }}-SNAPSHOT}
           fi
           echo "VERSION=${APP_VERSION}" >> $GITHUB_ENV
@@ -145,6 +145,7 @@ jobs:
           set -euo pipefail
           ARTIFACT_NAME="${ARTIFACT_ID}-${PROJECT_VERSION}.${PACKAGE_TYPE}"
           source ./env.sh build ./ --skip-vault
+          cd ./
           ./mvnw --batch-mode -Dmaven.test.skip=true -Pgithub clean deploy
           echo "artifact_sha256=$(sha256sum ./target/${ARTIFACT_NAME} | awk '{ print $1 }')" >> $GITHUB_OUTPUT
         env:
