@@ -19,6 +19,7 @@ env:
   BROKER_JWT: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
   SERVICE_PROJECT: oscar-example
   SERVICE_NAME: java-maven-pipeline-example
+  BASE_VERSION: 0.0.0-SNAPSHOT
 
 jobs:
   preflight:
@@ -102,10 +103,11 @@ jobs:
             TAG=${{ github.ref_name }}
             APP_VERSION=${TAG#v}
           else
-            BASE_VERSION=0.0.0-SNAPSHOT
             APP_VERSION=${BASE_VERSION/%SNAPSHOT/${{ steps.lookup-pr-merge-ref.outputs.version_modifier }}-SNAPSHOT}
           fi
           echo "VERSION=${APP_VERSION}" >> $GITHUB_ENV
+        env:
+          BASE_VERSION: ${{ env.BASE_VERSION }}
       - name: Set build output parameters
         id: set-build-output-parameters
         working-directory: ./
