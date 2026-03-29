@@ -19,7 +19,7 @@ env:
   BROKER_JWT: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
   SERVICE_PROJECT: oscar-example
   SERVICE_NAME: java-maven-pipeline-example
-  BASE_VERSION: 1.0.0-SNAPSHOT
+  BASE_VERSION: ${{ vars.BASE_VERSION || '0.0.0-SNAPSHOT' }}
 
 jobs:
   preflight:
