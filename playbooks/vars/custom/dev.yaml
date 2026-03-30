@@ -1,3 +1,5 @@
 # Use this file for custom variables related to your webapp
 tomcat_server_hosts: tomcat-servers-fusilli
 log_level_root: DEBUG
+
+tomcat_mirror: 127.0.0.1
