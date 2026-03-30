@@ -24,7 +24,6 @@ export PACKAGE_REPO="https://maven.pkg.github.com/bcgov/java-maven-pipeline-exam
 export POM_ROOT="./"
 export MAVEN_ARGS="--file $POM_ROOT"
 
-# Artifact version — Use VERSION environment variable if set, otherwise use default base version
 export VERSION="${VERSION:-0.0.0-SNAPSHOT}"
 
 # Only fetch vault secrets if --skip-vault is not set
