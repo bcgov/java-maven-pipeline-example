@@ -29,3 +29,7 @@ replay_pid*
 
 # flattened pom (used by flatten-maven-plugin)
 .flattened-pom.xml
+
+# ORAS artifact manifests and local artifacts directory
+/artifacts/
+/manifest.json
