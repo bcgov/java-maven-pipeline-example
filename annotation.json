@@ -1,0 +1,9 @@
+{
+  "$manifest": {
+    "org.opencontainers.image.description": "Build artifact for java-maven-pipeline-example version 1.0.0-SNAPSHOT",
+    "org.opencontainers.image.licenses": "Apache-2.0",
+    "org.opencontainers.image.source": "https://github.com/bcgov/java-maven-pipeline-example",
+    "org.opencontainers.image.title": "java-maven-pipeline-example-artifact",
+    "org.opencontainers.image.version": "1.0.0-SNAPSHOT"
+  }
+}

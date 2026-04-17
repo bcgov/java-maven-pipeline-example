@@ -137,21 +137,5 @@
         <revision>${env.VERSION}</revision>
       </properties>
     </profile>
-    <profile>
-      <id>github</id>
-      <distributionManagement>
-        <repository>
-          <id>github</id>
-          <name>GitHub Packages</name>
-          <url>https://maven.pkg.github.com/bcgov/java-maven-pipeline-example</url>
-          <releases>
-            <enabled>true</enabled>
-          </releases>
-          <snapshots>
-            <enabled>true</enabled>
-          </snapshots>
-        </repository>
-      </distributionManagement>
-    </profile>
   </profiles>
 </project>
