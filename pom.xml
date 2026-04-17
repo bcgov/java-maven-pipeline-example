@@ -4,19 +4,14 @@
   <groupId>bcgov.example</groupId>
   <artifactId>java-maven-pipeline-example</artifactId>
   <packaging>war</packaging>
-  <version>${app.version}</version>
+  <version>${revision}</version>
   <name>java-maven-pipeline-example</name>
   <properties>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <!-- Sentinel: the real value is supplied by the VERSION environment variable
-         (set by env.sh from the VERSION file). Building without sourcing env.sh
-         will produce a clearly invalid version rather than a stale hardcoded one.
-         Maven resolves plain user-defined properties in <version> natively at
-         install/deploy time — no flatten-maven-plugin required. -->
-    <app.version>UNSET</app.version>
+    <revision>1.0.0-SNAPSHOT</revision>
   </properties>
 
   <repositories>
@@ -98,13 +93,39 @@
           <warSourceDirectory>src/main/webapp</warSourceDirectory>
         </configuration>
       </plugin>
+
+      <!-- Flatten Maven Plugin -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <version>1.1.0</version>
+        <configuration>
+          <updatePomFile>true</updatePomFile>
+          <flattenMode>resolveCiFriendliesOnly</flattenMode>
+        </configuration>
+        <executions>
+          <execution>
+            <id>flatten</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>flatten</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>flatten.clean</id>
+            <phase>clean</phase>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
   <profiles>
     <!-- Activated automatically when the VERSION environment variable is set.
-         Overrides the <app.version> sentinel so the POM version matches the env var,
-         which env.sh reads from the VERSION file. -->
+         Sets the revision to the VERSION environment variable (avoids having to modify the pom file for release versions) -->
     <profile>
       <id>version-from-env</id>
       <activation>
@@ -113,7 +134,7 @@
         </property>
       </activation>
       <properties>
-        <app.version>${env.VERSION}</app.version>
+        <revision>${env.VERSION}</revision>
       </properties>
     </profile>
     <profile>
