@@ -7,6 +7,7 @@ on:
         required: true
         type: string
       config_branch:
+        description: 'Use branch for testing configuration changes'
         required: false
         type: string
 
@@ -19,11 +20,11 @@ env:
   SERVICE_NAME: java-maven-pipeline-example
   JOB: buildByToken/buildWithParameters?job=oscar-example/java-maven-pipeline-example
   URL: https://cd.io.nrs.gov.bc.ca
-  PACKAGE_REPO: https://maven.pkg.github.com/bcgov/java-maven-pipeline-example
+  PACKAGE_REPO: ghcr.io/${{ github.repository }}/java-maven-pipeline-example
 
 jobs:
   deploy-pre-release-build:
-    name: "Trigger ${{ inputs.environment }} deploy"
+    name: Trigger ${{ inputs.environment }} deployment
     if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
@@ -46,21 +47,23 @@ jobs:
             RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=bcgov:${{ github.ref_name }}&state=open&base=main" \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json")
-            PULL_REQUEST_NUMBER=$(echo "${RESPONSE}" | jq -r .[0].number)
-            RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls/$PULL_REQUEST_NUMBER" \
+            PR_NUMBER=$(echo "${RESPONSE}" | jq -r '.[0].number')
+            RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls/$PR_NUMBER" \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json")
             MERGEABLE=$(echo "${RESPONSE}" | jq -r .mergeable)
             if [[ "$MERGEABLE" != "true" ]]; then
-              echo "::error ::Pull request #$PULL_REQUEST_NUMBER is not mergeable… aborted."
+              echo "::error ::Pull request #$PR_NUMBER is not mergeable… aborted."
               echo "This error can be fixed by resolving the merge conflict with the main branch."
               exit 1
             fi
             echo "build_sha=$(echo ${RESPONSE} | jq -r .merge_commit_sha)" >> $GITHUB_OUTPUT
-            echo "checkout_ref=refs/pull/$PULL_REQUEST_NUMBER/merge" >> $GITHUB_OUTPUT
+            echo "checkout_ref=refs/pull/${PR_NUMBER}/merge" >> $GITHUB_OUTPUT
+            echo "package_tag=${PR_NUMBER}-merge" >> $GITHUB_OUTPUT
           else
             echo "build_sha=${{ github.sha }}" >> $GITHUB_OUTPUT
             echo "checkout_ref=${{ github.ref }}" >> $GITHUB_OUTPUT
+            echo "package_tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           fi
       - name: Set build output
         id: set-build-output
@@ -70,8 +73,6 @@ jobs:
             -H 'accept: application/json' \
             -H 'Authorization: Bearer '"${BROKER_JWT}"'' \
             -d '')
-          echo "Broker API response:"
-          echo "$RESPONSE"
           if echo "$RESPONSE" | jq -e '.statusCode == 401' > /dev/null; then
             echo "Status code is 401. This indicates an authorization error."
             echo "Please check if your Broker Token is valid. Teams can generate a new one in Broker if needed."
@@ -85,7 +86,7 @@ jobs:
             echo "============================================================"
             echo "Error: Broker API response data is empty."
             echo "------------------------------------------------------------"
-            echo "Explanation: No build information was found for this commit."
+            echo "Explanation: No build information was found for this tag."
             echo "Why it matters: The deployment cannot proceed without build metadata."
             echo "Check if the most recent build completed and published the artifact to Broker."
             echo "--- Broker API response below ---"
@@ -112,72 +113,14 @@ jobs:
             fetch-depth: 0
             fetch-tags: true
             ref: ${{ steps.lookup-pr-merge-ref.outputs.checkout_ref }}
-      - name: Set up Java
-        uses: actions/setup-java@v5
-        with:
-          java-version: '8'
-          distribution: 'temurin'
-          cache: maven
-      - name: Set download URL
+      - name: Set nodejs package download URL
         id: set-download-url
-        working-directory: ./
         run: |
-          set -e
-          sudo apt-get update
-          sudo apt-get -qq install libxml2-utils
-          GROUP_ID=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout --file ./pom.xml)
-          GROUP_ID_PATH="${GROUP_ID//.//}"
-          PACKAGE_TYPE=$(mvn help:evaluate -Dexpression=project.packaging -q -DforceStdout --file ./pom.xml)
-          CURL_RESPONSE=$(curl -w "\n%{http_code}" -LO "${PACKAGE_REPO}/${GROUP_ID_PATH}/${SERVICE_NAME}/${PROJECT_VERSION}/maven-metadata.xml" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}")
-          HTTP_STATUS=$(echo "$CURL_RESPONSE" | tail -n1)
-          if [ "$HTTP_STATUS" -ne 200 ]; then
-            echo
-            echo "============================================================"
-            echo "Error: Failed to download maven-metadata.xml (HTTP $HTTP_STATUS)"
-            echo "------------------------------------------------------------"
-            echo "Curl response:"
-            echo "$CURL_RESPONSE"
-            echo "============================================================"
-            echo
-            exit 1
-          fi
-          if ! grep -q "<timestamp>" maven-metadata.xml || ! grep -q "<buildNumber>" maven-metadata.xml; then
-            echo
-            echo "============================================================"
-            echo "Error: maven-metadata.xml does not contain <timestamp> or <buildNumber>."
-            echo "------------------------------------------------------------"
-            echo "Explanation: This usually means the artifact is not a snapshot build, or the metadata is missing/corrupted."
-            echo "Why it matters: Without <timestamp> and <buildNumber>, the workflow cannot construct the correct snapshot artifact filename, so the deployment cannot proceed."
-            echo "Check if the build published a snapshot and if the repository is correct."
-            echo "--- maven-metadata.xml contents below ---"
-            cat maven-metadata.xml
-            echo "============================================================"
-            echo
-            exit 1
-          fi
-          TIMESTAMP=$(xmllint --xpath 'string(//metadata/versioning/snapshot/timestamp)' maven-metadata.xml)
-          BUILD_NUMBER=$(xmllint --xpath 'string(//metadata/versioning/snapshot/buildNumber)' maven-metadata.xml)
-          if [ -z "$TIMESTAMP" ] || [ -z "$BUILD_NUMBER" ]; then
-            echo
-            echo "============================================================"
-            echo "Error: Could not extract timestamp or buildNumber from maven-metadata.xml"
-            echo "------------------------------------------------------------"
-            echo "Explanation: The XML structure may be different than expected, or the snapshot build did not complete properly."
-            echo "Why it matters: Without these values, the workflow cannot determine the correct artifact version to download, so deployment will fail."
-            echo "Verify the contents of maven-metadata.xml and ensure the build process published the snapshot."
-            cat maven-metadata.xml
-            echo "============================================================"
-            echo
-            exit 1
-          fi
-          SNAPSHOT_VERSION="${PROJECT_VERSION//SNAPSHOT/$TIMESTAMP-$BUILD_NUMBER}"
-          ARTIFACT_NAME="${SERVICE_NAME}-${SNAPSHOT_VERSION}.${PACKAGE_TYPE}"
-          DOWNLOAD_URL="${PACKAGE_REPO}/${GROUP_ID_PATH}/${SERVICE_NAME}/${PROJECT_VERSION}/${ARTIFACT_NAME}"
+          DOWNLOAD_URL="${PACKAGE_REPO}:${PACKAGE_TAG}"
           echo "${DOWNLOAD_URL}"
           echo "download_url=$(echo ${DOWNLOAD_URL})" >> $GITHUB_OUTPUT
         env:
-          SERVICE_NAME: ${{ env.SERVICE_NAME }}
-          PROJECT_VERSION: ${{ steps.set-build-output.outputs.project_version }}
+          PACKAGE_TAG: ${{ steps.lookup-pr-merge-ref.outputs.package_tag}}
           PACKAGE_REPO: ${{ env.PACKAGE_REPO }}
   deploy-release-build:
     name: Trigger production deployment
@@ -227,6 +170,7 @@ jobs:
             echo
             exit 1
           fi
+          echo "project_tag=${TAG}" >> $GITHUB_OUTPUT
           echo "project_version=${PROJECT_VERSION}" >> $GITHUB_OUTPUT
           echo "build_guid=$(echo ${RESPONSE} | jq -r '.data[].id')" >> $GITHUB_OUTPUT
           echo "build_number=$(echo ${RESPONSE} | jq -r '.data[].actions[].package.buildNumber')" >> $GITHUB_OUTPUT
@@ -244,41 +188,14 @@ jobs:
             fetch-depth: 0
             fetch-tags: true
             ref: ${{ github.ref }}
-      - name: Set up Java
-        uses: actions/setup-java@v5
-        with:
-          java-version: '8'
-          distribution: 'temurin'
-          cache: maven
       - name: Set download URL
         id: set-download-url
-        working-directory: ./
         run: |
-          set -e
-          sudo apt-get update
-          sudo apt-get -qq install libxml2-utils
-          GROUP_ID=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout --file ./pom.xml)
-          GROUP_ID_PATH="${GROUP_ID//.//}"
-          PACKAGE_TYPE=$(mvn help:evaluate -Dexpression=project.packaging -q -DforceStdout --file ./pom.xml)
-          ARTIFACT_NAME="${SERVICE_NAME}-${PROJECT_VERSION}.${PACKAGE_TYPE}"
-          DOWNLOAD_URL="${PACKAGE_REPO}/${GROUP_ID_PATH}/${SERVICE_NAME}/${PROJECT_VERSION}/${ARTIFACT_NAME}"
-          if [ -z "$GROUP_ID" ] || [ -z "$PACKAGE_TYPE" ] || [ -z "$ARTIFACT_NAME" ] || [ -z "$DOWNLOAD_URL" ]; then
-            echo
-            echo "============================================================"
-            echo "Error: Failed to construct the download URL for the release artifact."
-            echo "------------------------------------------------------------"
-            echo "Explanation: One or more required values (groupId, packaging, artifact name, or download URL) could not be determined."
-            echo "Why it matters: Without a valid download URL, the workflow cannot retrieve the release artifact, so deployment cannot proceed."
-            echo "Check that the pom.xml is present and contains valid groupId and packaging, and that environment variables are set correctly."
-            echo "============================================================"
-            echo
-            exit 1
-          fi
+          DOWNLOAD_URL="${PACKAGE_REPO}:${PACKAGE_TAG}"
           echo "${DOWNLOAD_URL}"
           echo "download_url=$(echo ${DOWNLOAD_URL})" >> $GITHUB_OUTPUT
         env:
-          SERVICE_NAME: ${{ env.SERVICE_NAME }}
-          PROJECT_VERSION: ${{ steps.set-tag-output.outputs.project_version }}
+          PACKAGE_TAG: ${{ steps.set-tag-output.outputs.project_tag }}
           PACKAGE_REPO: ${{ env.PACKAGE_REPO }}
   submit-deployment-job:
     name: Submit deployment job
@@ -297,9 +214,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0
-          fetch-tags: true
-          ref: ${{ github.ref }}
+            fetch-depth: 0
+            fetch-tags: true
+            ref: ${{ github.ref }}
       - name: Get deployment approver
         id: get-deployment-approver
         run: |
@@ -348,11 +265,10 @@ jobs:
             echo "Error: No deployment approver found. Failing deployment."
             exit 1
           fi
-          TRIGGER_UUID=$(uuidgen)
-          echo "trigger_uuid=$TRIGGER_UUID" >> $GITHUB_OUTPUT
+
           curl \
           --data-urlencode "token=${{ secrets.JENKINS_TOKEN }}" \
-          --data-urlencode "githubRunId=${TRIGGER_UUID}" \
+          --data-urlencode "githubRunId=${{ github.run_id }}" \
           --data-urlencode "githubToken=${{ secrets.GITHUB_TOKEN }}" \
           --data-urlencode "brokerJwt=${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}" \
           --data-urlencode "artifactSha256=${ARTIFACT_SHA256}" \
@@ -362,7 +278,7 @@ jobs:
           --data-urlencode "gitTag=${{ (startsWith(github.ref, 'refs/tags/') && github.ref_name) || '' }}" \
           --data-urlencode "configBranch=${{ inputs.config_branch || '' }}" \
           --data-urlencode "downloadUrl=${DOWNLOAD_URL}" \
-          --data-urlencode "downloadType=GITHUB" \
+          --data-urlencode "downloadType=OCI" \
           --data-urlencode "envLong=${{ inputs.environment }}" \
           --data-urlencode "triggerUrl=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
           --data-urlencode "deploymentApprover=${DEPLOYMENT_APPROVER}" \
@@ -378,7 +294,6 @@ jobs:
         run: |
           DEPLOYMENT_JOB_URL="${{ env.URL }}/job/${{ env.SERVICE_PROJECT }}/job/${{ env.SERVICE_NAME }}/"
           echo "Deployment job URL: ${DEPLOYMENT_JOB_URL}"
-
       - name: Wait for Jenkins deployment job to be triggered and completed
         id: check-jenkins-job-status
         run: ./.github/workflows/check-deploy-job-status.sh
@@ -387,4 +302,4 @@ jobs:
           BROKER_URL: https://broker.io.nrs.gov.bc.ca
           BROKER_JWT: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
-          TRIGGER_UUID: ${{ steps.submit-job.outputs.trigger_uuid}}
+          GITHUB_RUN_ID: ${{ github.run_id }}
