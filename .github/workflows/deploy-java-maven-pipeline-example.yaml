@@ -9,6 +9,9 @@ on:
       deploy_tag:
         required: true
         type: string
+      artifact_tag:
+        required: true
+        type: string
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -42,33 +45,57 @@ jobs:
       - name: Lookup PR Merge Ref
         id: lookup-pr-merge-ref
         run: |
-          if [[ ${{ github.ref_name != 'main' }} = true ]]; then
-            RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=bcgov:${{ github.ref_name }}&state=open&base=main" \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github+json")
-            PR_NUMBER=$(echo "${RESPONSE}" | jq -r '.[0].number')
-            RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls/$PR_NUMBER" \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github+json")
-            MERGEABLE=$(echo "${RESPONSE}" | jq -r .mergeable)
-            if [[ "$MERGEABLE" != "true" ]]; then
-              echo "::error ::Pull request #$PR_NUMBER is not mergeable… aborted."
-              echo "This error can be fixed by resolving the merge conflict with the main branch."
-              exit 1
-            fi
-            echo "build_sha=$(echo ${RESPONSE} | jq -r .merge_commit_sha)" >> $GITHUB_OUTPUT
-            echo "checkout_ref=refs/pull/${PR_NUMBER}/merge" >> $GITHUB_OUTPUT
-            echo "package_tag=${PR_NUMBER}-merge" >> $GITHUB_OUTPUT
-          else
-            echo "build_sha=${{ github.sha }}" >> $GITHUB_OUTPUT
-            echo "checkout_ref=${{ github.ref }}" >> $GITHUB_OUTPUT
-            echo "package_tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          WHERE_QUERY=$(jq -rn \
+            --arg serviceProject "$SERVICE_PROJECT" \
+            --arg serviceName "$SERVICE_NAME" \
+            --arg artifactTag "$ARTIFACT_TAG" \
+            '{"actions.action":"package-build","actions.service.project":$serviceProject,"actions.service.name":$serviceName,"actions.package.version":$artifactTag} | @uri')
+
+          RESPONSE=$(curl -s -X 'POST' \
+            "${BROKER_URL}/v1/intention/search?where=${WHERE_QUERY}&offset=0&limit=1" \
+            -H 'accept: application/json' \
+            -H 'Authorization: Bearer '"${BROKER_JWT}"'' \
+            -d '')
+
+          if echo "$RESPONSE" | jq -e '.statusCode == 401' > /dev/null; then
+            echo "Status code is 401. This indicates an authorization error."
+            echo "Please check if your Broker Token is valid. Teams can generate a new one in Broker if needed."
+            echo "Link: https://broker.io.nrs.gov.bc.ca/browse/brokerAccount"
+            echo "Exiting..."
+            exit 1
           fi
+
+          if [ "$(echo "$RESPONSE" | jq '.data | length')" -eq 0 ] || \
+             [ "$(echo "$RESPONSE" | jq '.data[].actions[].artifacts | length')" -eq 0 ]; then
+            echo
+            echo "============================================================"
+            echo "Error: Broker API response data is empty."
+            echo "------------------------------------------------------------"
+            echo "Explanation: No build information was found for this artifact_tag."
+            echo "Why it matters: The deployment cannot proceed without build metadata."
+            echo "Check if the build completed and published the artifact to Broker."
+            echo "--- Broker API response below ---"
+            echo "$RESPONSE"
+            echo "============================================================"
+            echo
+            exit 1
+          fi
+
+          BUILD_SHA=$(echo "$RESPONSE" | jq -r '.data[].actions[].package.buildVersion' | head -n1)
+          if [[ -z "${BUILD_SHA}" || "${BUILD_SHA}" == "null" ]]; then
+            echo "::error::Unable to resolve build SHA from Broker response for artifact_tag ${ARTIFACT_TAG}."
+            exit 1
+          fi
+
+          echo "build_sha=${BUILD_SHA}" >> $GITHUB_OUTPUT
+          echo "checkout_ref=${BUILD_SHA}" >> $GITHUB_OUTPUT
+          echo "package_tag=${ARTIFACT_TAG}" >> $GITHUB_OUTPUT
         env:
           BROKER_URL: https://broker.io.nrs.gov.bc.ca
           BROKER_JWT: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
           SERVICE_PROJECT: ${{ env.SERVICE_PROJECT }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
+          ARTIFACT_TAG: ${{ inputs.artifact_tag }}
       - name: Set build output
         id: set-build-output
         run: |
@@ -151,8 +178,8 @@ jobs:
       - name: Set tag output
         id: set-tag-output
         run: |
-          TAG=${{ github.ref_name }}
-          PROJECT_VERSION=${TAG#v}
+          TAG=${ARTIFACT_TAG}
+          PROJECT_VERSION=${ARTIFACT_TAG}
           WHERE_QUERY=$(jq -rn \
             --arg serviceProject "$SERVICE_PROJECT" \
             --arg serviceName "$SERVICE_NAME" \
@@ -188,7 +215,7 @@ jobs:
           fi
           echo "project_tag=${TAG}" >> $GITHUB_OUTPUT
           echo "project_version=${PROJECT_VERSION}" >> $GITHUB_OUTPUT
-          echo "checkout_ref=${{ github.ref }}" >> $GITHUB_OUTPUT
+          echo "checkout_ref=$(echo ${RESPONSE} | jq -r '.data[].actions[].package.buildVersion' | head -n1)" >> $GITHUB_OUTPUT
           echo "build_guid=$(echo ${RESPONSE} | jq -r '.data[].id')" >> $GITHUB_OUTPUT
           echo "build_number=$(echo ${RESPONSE} | jq -r '.data[].actions[].package.buildNumber')" >> $GITHUB_OUTPUT
           echo "artifact_name=$(echo ${RESPONSE} | jq -r '.data[].actions[].artifacts[].name')" >> $GITHUB_OUTPUT
@@ -199,6 +226,7 @@ jobs:
           BROKER_JWT: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
           SERVICE_PROJECT: ${{ env.SERVICE_PROJECT }}
           SERVICE_NAME: ${{ env.SERVICE_NAME }}
+          ARTIFACT_TAG: ${{ inputs.artifact_tag }}
       - name: Checkout repository
         uses: actions/checkout@v6
         with:

@@ -15,6 +15,10 @@ on:
         description: 'Deployment config tag (If not provided, will auto-detect latest tag)'
         required: false
         type: string
+      artifact_tag:
+        description: 'Artifact/package tag (required for non-repository artifact sources)'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -63,6 +67,7 @@ jobs:
     with:
       environment: development
       deploy_tag: ${{ github.event.inputs.deploy_tag != '' && github.event.inputs.deploy_tag || needs.find-tag.outputs.deploy_tag }}
+      artifact_tag: ${{ github.event.inputs.artifact_tag }}
     secrets: inherit
     if: |
       github.event.inputs.environment == 'development' ||
@@ -76,6 +81,7 @@ jobs:
     with:
       environment: test
       deploy_tag: ${{ github.event.inputs.deploy_tag != '' && github.event.inputs.deploy_tag || needs.find-tag.outputs.deploy_tag }}
+      artifact_tag: ${{ github.event.inputs.artifact_tag }}
     secrets: inherit
     if: |
       github.event.inputs.environment == 'test' ||
@@ -88,5 +94,6 @@ jobs:
     with:
       environment: production
       deploy_tag: ${{ github.event.inputs.deploy_tag != '' && github.event.inputs.deploy_tag || needs.find-tag.outputs.deploy_tag }}
+      artifact_tag: ${{ github.event.inputs.artifact_tag }}
     secrets: inherit
     if: github.event.inputs.environment == 'production'

@@ -31,6 +31,6 @@ metadata:
     playbook.io.nrs.gov.bc.ca/mavenBuildCommand: --batch-mode -Dmaven.test.skip=true -Pgithub clean deploy
     playbook.io.nrs.gov.bc.ca/deploymentConfigPaths: playbooks
     playbook.io.nrs.gov.bc.ca/deployType: tomcat
-    playbook.io.nrs.gov.bc.ca/artifactSrc: repo
+    playbook.io.nrs.gov.bc.ca/artifactSrc: github
 apiVersion: backstage.io/v1alpha1
 kind: Component
