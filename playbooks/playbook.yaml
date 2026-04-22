@@ -26,16 +26,15 @@
     # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/self_signed_cert
     - role: self_signed_cert
 
-    # Install OCI application (webapp)
-    # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/oci_app
-    - role: oci_app
-      vars:
-        oci_app_runtime_install_dir: "{{ tomcat_install_dir_current }}"
-        oci_app_service_command: "{{ oci_app_runtime_home }}/bin/catalina.sh run"
-        oci_app_service_options: "-jar app.jar"
-        oci_app_env_dict:
-          JAVA_OPTS: "-Xmx512m"
+    - role: tomcat
 
+    # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/webapp
+    - role: webapp
+      vars:
+        webapp_war:
+          context: "{{ context }}"
+        webapp_root_log_level: "{{ log_level_root | default('INFO')}}"
+  
   tasks:
     - ansible.builtin.stat:
         path: custom-tasks.yaml
