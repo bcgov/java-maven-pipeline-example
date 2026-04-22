@@ -33,3 +33,4 @@ replay_pid*
 # ORAS artifact manifests and local artifacts directory
 /artifacts/
 /manifest.json
+/annotation.json
