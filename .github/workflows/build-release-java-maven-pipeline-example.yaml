@@ -127,7 +127,7 @@ jobs:
           PACKAGE_BUILD_GUID:  ${{ steps.set-build-output-parameters.outputs.build_guid }}
           PACKAGE_BUILD_NUMBER: ${{ github.run_number }}
           PACKAGE_BUILD_VERSION: ${{ steps.set-build-output-parameters.outputs.git_commit }}
-          PACKAGE_TYPE: application/vnd.oci.image.layer.v1.tar+gzip
+          PACKAGE_TYPE: application/java-archive
           PACKAGE_VERSION: ${{ steps.set-build-output-parameters.outputs.project_version }}
       - name: Open intention
         uses: bcgov-nr/action-broker-intention-open@v2
@@ -149,9 +149,7 @@ jobs:
           ARTIFACT_NAME="${ARTIFACT_ID}-${PROJECT_VERSION}.${PACKAGE_TYPE}"
           source ./env.sh build ./ --skip-vault
           ./mvnw --batch-mode -Dmaven.test.skip=true clean package
-          # package artifact into tar.gz for ORAS
-          TAR_NAME="${ARTIFACT_ID}-${PROJECT_VERSION}.tar.gz"
-          tar -C target -czf ${TAR_NAME} "${ARTIFACT_NAME}" || (ls -al target && false)
+          cd target
           cat <<EOF > annotation.json
           {
             "\$manifest": {
@@ -164,7 +162,7 @@ jobs:
           }
           EOF
           oras login ghcr.io -u ${{ github.actor }} --password-stdin <<< ${{ secrets.GITHUB_TOKEN }}
-          oras push --annotation-file annotation.json --export-manifest manifest.json ghcr.io/${{ github.repository }}/java-maven-pipeline-example:${PROJECT_TAG} ${TAR_NAME}
+          oras push --annotation-file annotation.json --export-manifest manifest.json --artifact-type application/java-archive ghcr.io/${{ github.repository }}/java-maven-pipeline-example:${PROJECT_TAG} ${ARTIFACT_NAME}:application/java-archive
           MANIFEST=$(cat ./manifest.json)
           echo $MANIFEST
           echo "artifact_sha256=$(echo $MANIFEST | jq -r '.layers | map(.digest) | join(",")' | sha256sum | awk '{print $1}')" >> $GITHUB_OUTPUT
