@@ -1,0 +1,34 @@
+name: Retain GHCR Package Versions
+
+on:
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  retain-packages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package_name: java-maven-pipeline-example
+            keep_versions: 10
+            ignore_versions: '^v?\d+(\.\d+)+$'
+          - package_name: deployment-config
+            keep_versions: 10
+            ignore_versions: '^d?\d+(\.\d+)+$'
+
+    steps:
+      - name: Delete old package versions
+        uses: actions/delete-package-versions@v5
+        with:
+          owner: ${{ github.repository_owner }}
+          package-name: ${{ matrix.package_name }}
+          package-type: container
+          min-versions-to-keep: ${{ matrix.keep_versions }}
+          ignore-versions: ${{ matrix.ignore_versions }}
+          token: ${{ secrets.GITHUB_TOKEN }}
