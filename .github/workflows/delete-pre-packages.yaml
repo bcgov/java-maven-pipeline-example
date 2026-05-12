@@ -26,5 +26,4 @@ jobs:
           package-name: ${{ matrix.package_name }}
           package-type: container
           min-versions-to-keep: ${{ matrix.keep_versions }}
-          ignore-versions: ${{ matrix.ignore_versions }}
           token: ${{ secrets.GITHUB_TOKEN }}
