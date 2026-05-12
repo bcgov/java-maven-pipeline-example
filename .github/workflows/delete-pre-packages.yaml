@@ -1,8 +1,6 @@
 name: Retain GHCR Package Versions
 
 on:
-  schedule:
-    - cron: '30 3 * * *'
   workflow_dispatch:
 
 jobs:
@@ -17,10 +15,8 @@ jobs:
         include:
           - package_name: java-maven-pipeline-example
             keep_versions: 10
-            ignore_versions: '^v?\d+(\.\d+)+$'
           - package_name: deployment-config
             keep_versions: 10
-            ignore_versions: '^d?\d+(\.\d+)+$'
 
     steps:
       - name: Delete old package versions
