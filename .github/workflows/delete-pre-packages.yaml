@@ -13,9 +13,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - package_name: java-maven-pipeline-example
+          - package_name: java-maven-pipeline-example%2Fjava-maven-pipeline-example
             keep_versions: 10
-          - package_name: deployment-config
+          - package_name: java-maven-pipeline-example%2Fdeployment-config
             keep_versions: 10
 
     steps:
