@@ -30,8 +30,13 @@ jobs:
           version_ids=$(gh api \
             /orgs/${OWNER}/packages/container/${PACKAGE_NAME}/versions \
             --paginate \
-            --jq '.[] | select(any(.metadata.container.tags[]?; test("(^|[-.])'"$PR_NUMBER"'([-.]|$)"))) | .id' \
-            || true)
+            --jq '.[] | select(
+              any(.metadata.container.tags[]?; 
+                test("(^|[-.])'"$PR_NUMBER"'([-.]|$)") 
+                and
+                (test("^[vd]?\\d+(\\.\\d+)*$") | not)
+              )
+            ) | .id' || true)
 
           if [[ -z "${version_ids}" ]]; then
             echo "No matching preview versions found for ${PACKAGE_NAME} and PR ${PR_NUMBER}"
