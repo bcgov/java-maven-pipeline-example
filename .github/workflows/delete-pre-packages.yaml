@@ -21,15 +21,6 @@ jobs:
             keep_versions: 10
 
     steps:
-      - name: Delete old 'main' versions or leftover 'snapshot' versions 
-        uses: actions/delete-package-versions@v5
-        with:
-          package-name: ${{ matrix.package_name }}
-          package-type: 'container'
-          version-selection-strategy: 'regex'
-          version-regex: '(?i)^.*(main|snapshot).*$'
-          min-versions-to-keep: 3
-
       - name: Delete old release versions (Keep ${{ matrix.keep_versions }})
         uses: actions/delete-package-versions@v5
         with:
