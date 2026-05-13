@@ -1,0 +1,30 @@
+name: Retain GHCR Package Versions
+
+on:
+  workflow_dispatch:
+
+jobs:
+  retain-packages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package_name: java-maven-pipeline-example%2Fjava-maven-pipeline-example
+            keep_versions: 10
+          - package_name: java-maven-pipeline-example%2Fdeployment-config
+            keep_versions: 10
+
+    steps:
+      - name: Delete old release versions (Keep ${{ matrix.keep_versions }})
+        uses: actions/delete-package-versions@v5
+        with:
+          owner: ${{ github.repository_owner }}
+          package-name: ${{ matrix.package_name }}
+          package-type: container
+          min-versions-to-keep: ${{ matrix.keep_versions }}

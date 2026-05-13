@@ -1,0 +1,45 @@
+name: Delete PR Preview Packages
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  delete-preview-packages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        package_name:
+          - java-maven-pipeline-example%2Fjava-maven-pipeline-example
+          - java-maven-pipeline-example%2Fdeployment-config
+
+    steps:
+      - name: Delete package versions tagged with this PR number
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          PACKAGE_NAME: ${{ matrix.package_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          version_ids=$(gh api \
+            /orgs/${OWNER}/packages/container/${PACKAGE_NAME}/versions \
+            --paginate \
+            --jq '.[] | select(any(.metadata.container.tags[]?; test("(^|[-.])'"$PR_NUMBER"'([-.]|$)"))) | .id' \
+            || true)
+
+          if [[ -z "${version_ids}" ]]; then
+            echo "No matching preview versions found for ${PACKAGE_NAME} and PR ${PR_NUMBER}"
+            exit 0
+          fi
+
+          for version_id in ${version_ids}; do
+            gh api \
+              --method DELETE \
+              /orgs/${OWNER}/packages/container/${PACKAGE_NAME}/versions/${version_id}
+          done
