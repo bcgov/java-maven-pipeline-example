@@ -199,8 +199,10 @@ jobs:
           cat >> $GITHUB_STEP_SUMMARY << EOF
           # Build Summary
 
+          | | |
+          | - | - |
           | **Ref** | \`${{ env.CHECKOUT_REF }}\` |
-          | **Commit** | [${COMMIT_HASH:0:7}]($https://github.com/${{ github.repository }}/tree/${COMMIT_HASH}) |
+          | **Commit** | [${COMMIT_HASH:0:7}](https://github.com/${{ github.repository }}/tree/${COMMIT_HASH}) |
           | **Version** | ${PROJECT_VERSION} |
           | **Artifact SHA256** | ${ARTIFACT_SHA256} |
 
