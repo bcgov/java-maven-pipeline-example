@@ -42,10 +42,32 @@ jobs:
       artifact_sha256: ${{ steps.set-build-output.outputs.artifact_sha256 }}
       download_url: ${{ steps.set-download-url.outputs.download_url }}
       checkout_ref: ${{ steps.lookup-pr-merge-ref.outputs.checkout_ref }}
+      deploy_ref: ${{ steps.lookup-pr-merge-ref.outputs.deploy_ref }}
     steps:
       - name: Lookup PR Merge Ref
         id: lookup-pr-merge-ref
         run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "deploy_ref=${{ github.ref }}" >> $GITHUB_OUTPUT
+          elif [[ ${{ github.ref_name != 'main' }} = true ]]; then
+            RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=bcgov:${{ github.head_ref || github.ref_name }}&state=open&base=main" \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json")
+            PULL_REQUEST_NUMBER=$(echo "${RESPONSE}" | jq -r .[0].number)
+            RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls/$PULL_REQUEST_NUMBER" \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json")
+            MERGEABLE=$(echo "${RESPONSE}" | jq -r .mergeable)
+            if [[ "$MERGEABLE" != "true" ]]; then
+              echo "::error ::Pull request #$PULL_REQUEST_NUMBER is not mergeable… aborted."
+              echo "This can be resolved by resolving the merge conflict with the main branch."
+              exit 1
+            fi
+            echo "deploy_ref=refs/pull/$PULL_REQUEST_NUMBER/merge" >> $GITHUB_OUTPUT
+          else
+            echo "deploy_ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
           WHERE_QUERY=$(jq -rn \
             --arg serviceProject "$SERVICE_PROJECT" \
             --arg serviceName "$SERVICE_NAME" \
@@ -381,10 +403,11 @@ jobs:
 
           | | |
           | - | - |
-          | **Deploy Tag** | ${DEPLOY_TAG} |
+          } **Ref** | `${DEPLOY_REF}` |
           | **Commit** | [${COMMIT_HASH:0:7}](https://github.com/${{ github.repository }}/tree/${COMMIT_HASH}) |
           | **Version** | ${PROJECT_VERSION} |
           | **Artifact SHA256** | ${ARTIFACT_SHA256} |
+          | **Deployment Config Tag** | ${DEPLOY_TAG} |
           $(if [[ -n "${{ steps.check-jenkins-job-status.outputs.event_url }}" ]]; then
             echo "| **Job Run** | [View Details](${{ steps.check-jenkins-job-status.outputs.event_url }}) |"
           else
@@ -400,8 +423,9 @@ jobs:
           EOF
         env:
           ENVIRONMENT: ${{ inputs.environment }}
-          DEPLOY_TAG: ${{ inputs.deploy_tag }}
+          DEPLOY_REF: ${{ needs.deploy-pre-release-build.output.deploy_ref || github.ref }}
           COMMIT_HASH: ${{ needs.deploy-pre-release-build.outputs.checkout_ref || needs.deploy-release-build.outputs.checkout_ref }}
           PROJECT_VERSION: ${{ needs.deploy-pre-release-build.outputs.project_version || needs.deploy-release-build.outputs.project_version }}
           ARTIFACT_SHA256: ${{ needs.deploy-pre-release-build.outputs.artifact_sha256 || needs.deploy-release-build.outputs.artifact_sha256 }}
+          DEPLOY_CONFIG_TAG: ${{ inputs.deploy_tag }}
 
