@@ -127,7 +127,7 @@ jobs:
           PACKAGE_BUILD_GUID:  ${{ steps.set-build-output-parameters.outputs.build_guid }}
           PACKAGE_BUILD_NUMBER: ${{ github.run_number }}
           PACKAGE_BUILD_VERSION: ${{ steps.set-build-output-parameters.outputs.git_commit }}
-          PACKAGE_TYPE: application/java-archive
+          PACKAGE_TYPE: application/vnd.oci.image.layer.v1.tar+gzip
           PACKAGE_VERSION: ${{ steps.set-build-output-parameters.outputs.project_version }}
       - name: Open intention
         uses: bcgov-nr/action-broker-intention-open@v2
@@ -153,26 +153,27 @@ jobs:
           cat <<EOF > annotation.json
           {
             "\$manifest": {
-              "org.opencontainers.image.description": "Build artifact for ${ARTIFACT_ID} version ${PROJECT_VERSION}",
+              "org.opencontainers.image.description": "Build artifact for java-maven-pipeline-example version ${PROJECT_VERSION}",
               "org.opencontainers.image.licenses": "Apache-2.0",
               "org.opencontainers.image.source": "${{ github.repositoryUrl }}",
-              "org.opencontainers.image.title": "${ARTIFACT_ID}-artifact",
+              "org.opencontainers.image.title": "java-maven-pipeline-example-artifact",
               "org.opencontainers.image.version": "${PROJECT_VERSION}"
             }
           }
           EOF
           oras login ghcr.io -u ${{ github.actor }} --password-stdin <<< ${{ secrets.GITHUB_TOKEN }}
-          oras push --annotation-file annotation.json --export-manifest manifest.json --artifact-type application/java-archive ghcr.io/${{ github.repository }}/java-maven-pipeline-example:${PROJECT_TAG} ${ARTIFACT_NAME}:application/java-archive
+          oras push --annotation-file annotation.json --export-manifest manifest.json ghcr.io/${{ github.repository }}/java-maven-pipeline-example:${PROJECT_VERSION} ${ARTIFACT_NAME}
           MANIFEST=$(cat ./manifest.json)
           echo $MANIFEST
           echo "artifact_sha256=$(echo $MANIFEST | jq -r '.layers | map(.digest) | join(",")' | sha256sum | awk '{print $1}')" >> $GITHUB_OUTPUT
           echo "artifact_size=$(echo $MANIFEST | jq -r '.layers | map(.size) | add')" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
+          ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
           PROJECT_VERSION: ${{ steps.set-build-output-parameters.outputs.project_version }}
           ARTIFACT_ID: ${{ steps.set-build-output-parameters.outputs.artifact_id }}
           PACKAGE_TYPE: ${{ steps.set-build-output-parameters.outputs.package_type }}
-          PROJECT_TAG: ${{ steps.set-build-output-parameters.outputs.project_version }}
       - name: Send build info
         run: |
           curl -s POST ${{ env.BROKER_URL }}/v1/intention/action/patch \
