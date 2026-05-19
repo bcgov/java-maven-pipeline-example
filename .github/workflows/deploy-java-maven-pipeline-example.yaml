@@ -423,7 +423,7 @@ jobs:
           EOF
         env:
           ENVIRONMENT: ${{ inputs.environment }}
-          DEPLOY_REF: ${{ needs.deploy-pre-release-build.output.deploy_ref || github.ref }}
+          DEPLOY_REF: ${{ needs.deploy-pre-release-build.outputs.deploy_ref || github.ref }}
           COMMIT_HASH: ${{ needs.deploy-pre-release-build.outputs.checkout_ref || needs.deploy-release-build.outputs.checkout_ref }}
           PROJECT_VERSION: ${{ needs.deploy-pre-release-build.outputs.project_version || needs.deploy-release-build.outputs.project_version }}
           ARTIFACT_SHA256: ${{ needs.deploy-pre-release-build.outputs.artifact_sha256 || needs.deploy-release-build.outputs.artifact_sha256 }}
