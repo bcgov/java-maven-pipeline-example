@@ -407,7 +407,7 @@ jobs:
           | **Commit** | [${COMMIT_HASH:0:7}](https://github.com/${{ github.repository }}/tree/${COMMIT_HASH}) |
           | **Version** | ${PROJECT_VERSION} |
           | **Artifact SHA256** | ${ARTIFACT_SHA256} |
-          | **Deployment Config Tag** | ${DEPLOY_TAG} |
+          | **Deployment Config Tag** | ${DEPLOY_CONFIG_TAG} |
           $(if [[ -n "${{ steps.check-jenkins-job-status.outputs.event_url }}" ]]; then
             echo "| **Job Run** | [View Details](${{ steps.check-jenkins-job-status.outputs.event_url }}) |"
           else
