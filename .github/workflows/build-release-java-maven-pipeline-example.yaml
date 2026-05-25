@@ -149,9 +149,9 @@ jobs:
           ARTIFACT_NAME="${ARTIFACT_ID}-${PROJECT_VERSION}.${PACKAGE_TYPE}"
           source ./env.sh build ./ --skip-vault
           ./mvnw --batch-mode -Dmaven.test.skip=true clean package
+          cd target
           unzip ${ARTIFACT_NAME} -d release
-          cd target/release
-          cat <<EOF > ../annotation.json
+          cat <<EOF > annotation.json
           {
             "\$manifest": {
               "org.opencontainers.image.description": "Build artifact for java-maven-pipeline-example version ${PROJECT_VERSION}",
@@ -162,6 +162,7 @@ jobs:
             }
           }
           EOF
+          cd release
           oras login ghcr.io -u ${{ github.actor }} --password-stdin <<< ${{ secrets.GITHUB_TOKEN }}
           oras push --annotation-file ../annotation.json --export-manifest manifest.json ghcr.io/${{ github.repository }}/java-maven-pipeline-example:${PROJECT_VERSION} ./*
           MANIFEST=$(cat ./manifest.json)
