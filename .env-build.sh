@@ -19,6 +19,7 @@ fi
 export PROJECT_NAME="oscar-example"
 export SERVICE_NAME="java-maven-pipeline-example"
 export PACKAGE_REPO="https://maven.pkg.github.com/bcgov/java-maven-pipeline-example"
+export PUBLISH_DIR="dist"
 
 # Maven build configuration
 export POM_ROOT="./"
