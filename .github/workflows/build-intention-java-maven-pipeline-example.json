@@ -20,7 +20,7 @@
         "buildVersion": "",
         "buildNumber": 0,
         "name": "java-maven-pipeline-example",
-        "type": "war",
+        "type": "application/vnd.oci.image.layer.v1.tar+gzip",
         "license": "Apache-2.0"
       }
     }

@@ -163,7 +163,7 @@ jobs:
           source ./env.sh build ./ --skip-vault
           PACKAGE_DIR="${PUBLISH_DIR:-dist}"
           PACKAGE_DIR="${PACKAGE_DIR%% *}"
-          ./mvnw --batch-mode -Dmaven.test.skip=true clean package -Dpublish.dir="$PACKAGE_DIR"
+          ./mvnw --batch-mode -Dmaven.test.skip=true -Pgithub clean package -Dpublish.dir="$PACKAGE_DIR"
           ARTIFACT_FILE="target/${ARTIFACT_ID}-${PROJECT_VERSION}.${PACKAGE_TYPE}"
           if [ ! -f "$ARTIFACT_FILE" ]; then
             echo "::error ::Expected Maven output not found: $ARTIFACT_FILE"
@@ -193,6 +193,8 @@ jobs:
           echo "artifact_size=$(echo $MANIFEST | jq -r '.layers | map(.size) | add')" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
+          ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
           PROJECT_VERSION: ${{ steps.set-build-output-parameters.outputs.project_version }}
           PROJECT_TAG: ${{ steps.set-build-output-parameters.outputs.project_version }}
           ARTIFACT_ID: ${{ steps.set-build-output-parameters.outputs.artifact_id }}
