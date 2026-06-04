@@ -42,6 +42,22 @@ jobs:
           fi
       - name: Setup ORAS
         uses: oras-project/setup-oras@v2
+      - name: Verify catalog info and get deploy config path type
+        id: catalog-info
+        run: |
+          CATALOG_FILE="catalog-info.yaml"
+
+          if [[ ! -f "$CATALOG_FILE" ]]; then
+            echo "Error: $CATALOG_FILE was not found."
+            exit 1
+          fi
+
+          deploy_type="$(yq e '.metadata.annotations["playbook.io.nrs.gov.bc.ca/deployType"] // ""' "$CATALOG_FILE" | tr -d '\r')"
+          deploy_config_path="$(yq e '.metadata.annotations["playbook.io.nrs.gov.bc.ca/deploymentConfigPaths"] // ""' "$CATALOG_FILE" | tr -d '\r')"
+          echo "deploy_type=$deploy_type" >> "$GITHUB_OUTPUT"
+          echo "deploy_config_path=$deploy_config_path" >> "$GITHUB_OUTPUT"
+          echo "Resolved deploy_type: $deploy_type"
+          echo "Resolved deploy_config_path: $deploy_config_path"
       - name: Create annotations files
         run: |
           cat <<EOF > annotation.json
@@ -79,11 +95,15 @@ jobs:
           | | |
           | - | - |
           | **Deployment Config Tag** | \`${{ env.PROJECT_TAG }}\` |
+          | **Deploy Type** | \`${{ env.DEPLOY_TYPE }}\` |
+          | **Deployment Config Path** | \`${{ env.DEPLOY_CONFIG_PATH }}\` |
           | **Artifact SHA256** | \`${{ env.ARTIFACT_SHA256 }}\` |
           | **Artifact Size** | \`${{ env.ARTIFACT_SIZE }}\`
 
           EOF
         env:
           PROJECT_TAG: ${{ steps.set-version.outputs.tag }}
+          DEPLOY_TYPE: ${{ steps.catalog-info.outputs.deploy_type }}
+          DEPLOY_CONFIG_PATH: ${{ steps.catalog-info.outputs.deploy_config_path }}
           ARTIFACT_SHA256: ${{ steps.publish-dc.outputs.artifact_sha256 }}
           ARTIFACT_SIZE: ${{ steps.publish-dc.outputs.artifact_size }}
