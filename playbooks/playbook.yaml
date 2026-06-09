@@ -26,15 +26,17 @@
     # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/self_signed_cert
     - role: self_signed_cert
 
+    # Install & configure the Tomcat container
+    # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/tomcat
     - role: tomcat
 
-    # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/webapp
-    - role: webapp
+    # Install OCI application (webapp)
+    # See: https://github.com/bcgov/nr-polaris-collection/tree/main/polaris/deploy/roles/oci_app
+    - role: oci_app
       vars:
-        webapp_war:
-          context: "{{ context }}"
-        webapp_root_log_level: "{{ log_level_root | default('INFO')}}"
-  
+        oci_app_service_install_app_home: "{{ oci_app_service_install_home }}/webapps/{{ context }}"
+        oci_app_startup_command: "{{ tomcat_install_dir_current }}/bin/catalina.sh run"
+
   tasks:
     - ansible.builtin.stat:
         path: custom-tasks.yaml
@@ -62,3 +64,23 @@
     #         src: "web.xml.j2",
     #         dest: "{{ polaris_apps_service_install_home }}/webapps/{{ alt_app_dir_name | default(context) }}/WEB-INF/web.xml"
     #       }
+
+    - name: "java-maven-pipeline-example: Stop"
+      ansible.builtin.include_role:
+        name: service_control
+      vars:
+        service_control_action: 'stop'
+
+    - meta: flush_handlers
+
+    - name: "java-maven-pipeline-example: {{ polaris_control_handler }} setup"
+      ansible.builtin.include_role:
+        name: service_control
+      vars:
+        service_control_action: 'setup'
+
+    - name: "java-maven-pipeline-example: Start"
+      ansible.builtin.include_role:
+        name: service_control
+      vars:
+        service_control_action: 'start'

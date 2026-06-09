@@ -19,12 +19,11 @@ fi
 export PROJECT_NAME="oscar-example"
 export SERVICE_NAME="java-maven-pipeline-example"
 export PACKAGE_REPO="https://maven.pkg.github.com/bcgov/java-maven-pipeline-example"
-export PUBLISH_DIR="dist"
 
 # Maven build configuration
 export POM_ROOT="./"
 export MAVEN_ARGS="--file $POM_ROOT"
-
+export PUBLISH_DIR="dist"
 export VERSION="${VERSION:-0.0.0-SNAPSHOT}"
 
 # Only fetch vault secrets if --skip-vault is not set

@@ -33,5 +33,8 @@ metadata:
     playbook.io.nrs.gov.bc.ca/artifactSrc: github
     playbook.io.nrs.gov.bc.ca/publishArtifactSuffix: dist
     playbook.io.nrs.gov.bc.ca/mavenBuildCommand: --batch-mode -Dmaven.test.skip=true -Pgithub clean package
+    playbook.io.nrs.gov.bc.ca/addLog4j2Config: false
+    playbook.io.nrs.gov.bc.ca/addTomcatContext: false
+    playbook.io.nrs.gov.bc.ca/createDataTmpDir: false
 apiVersion: backstage.io/v1alpha1
 kind: Component
