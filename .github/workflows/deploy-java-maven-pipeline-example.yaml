@@ -50,7 +50,7 @@ jobs:
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
             echo "deploy_ref=${{ github.ref }}" >> $GITHUB_OUTPUT
           elif [[ ${{ github.ref_name != 'main' }} = true ]]; then
-            RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=bcgov:${{ github.head_ref || github.ref_name }}&state=open&base=main" \
+            RESPONSE=$(curl -s "https://api.github.com/repos/bcgov/java-maven-pipeline-example/pulls?head=bcgov:${{ github.ref_name }}&state=open&base=main" \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json")
             PULL_REQUEST_NUMBER=$(echo "${RESPONSE}" | jq -r .[0].number)
@@ -180,7 +180,7 @@ jobs:
           echo "${DOWNLOAD_URL}"
           echo "download_url=$(echo ${DOWNLOAD_URL})" >> $GITHUB_OUTPUT
         env:
-          PACKAGE_TAG: ${{ steps.lookup-pr-merge-ref.outputs.package_tag}}
+          PACKAGE_TAG: ${{ steps.lookup-pr-merge-ref.outputs.package_tag || steps.set-build-output.outputs.project_version }}
           PACKAGE_REPO: ${{ env.PACKAGE_REPO }}
   deploy-release-build:
     name: Trigger deployment

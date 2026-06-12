@@ -78,6 +78,21 @@ jobs:
             fetch-depth: 0
             fetch-tags: true
             ref: ${{ steps.lookup-pr-merge-ref.outputs.checkout_ref }}
+      - name: Set version
+        id: set-oci-tag
+        run: |
+          REF_NAME="${{ github.ref_name }}"
+          SAFE_REF_NAME=$(echo "$REF_NAME" | tr '/' '-')
+
+          if [[ ${{ startsWith(github.ref, 'refs/heads/') }} = true ]]; then
+            echo "tag=${SAFE_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ ${{ startsWith(github.ref, 'refs/pull/') }} = true ]]; then
+            echo "tag=${SAFE_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ ${{ startsWith(github.ref, 'refs/tags/v') }} = true ]]; then
+            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
       - name: Setup ORAS
         uses: oras-project/setup-oras@v2
       - name: Set up Java
@@ -127,7 +142,7 @@ jobs:
           PACKAGE_BUILD_GUID:  ${{ steps.set-build-output-parameters.outputs.build_guid }}
           PACKAGE_BUILD_NUMBER: ${{ github.run_number }}
           PACKAGE_BUILD_VERSION: ${{ steps.set-build-output-parameters.outputs.git_commit }}
-          PACKAGE_TYPE: application/java-archive
+          PACKAGE_TYPE: application/vnd.oci.image.layer.v1.tar+gzip
           PACKAGE_VERSION: ${{ steps.set-build-output-parameters.outputs.project_version }}
       - name: Open intention
         uses: bcgov-nr/action-broker-intention-open@v2
@@ -145,42 +160,54 @@ jobs:
         id: publish-artifact
         working-directory: ./
         run: |
-          set -euo pipefail
-          ARTIFACT_NAME="${ARTIFACT_ID}-${PROJECT_VERSION}.${PACKAGE_TYPE}"
           source ./env.sh build ./ --skip-vault
-          ./mvnw --batch-mode -Dmaven.test.skip=true clean package
-          cd target
+          PACKAGE_DIR="${PUBLISH_DIR:-dist}"
+          PACKAGE_DIR="${PACKAGE_DIR%% *}"
+          ./mvnw --batch-mode -Dmaven.test.skip=true -Pgithub clean package -Dpublish.dir="$PACKAGE_DIR"
+          ARTIFACT_FILE="target/${ARTIFACT_ID}-${PROJECT_VERSION}.${PACKAGE_TYPE}"
+          if [ ! -f "$ARTIFACT_FILE" ]; then
+            echo "::error ::Expected Maven output not found: $ARTIFACT_FILE"
+            exit 1
+          fi
+          rm -rf "$PACKAGE_DIR"
+          mkdir -p "$PACKAGE_DIR"
+          unzip -o "$ARTIFACT_FILE" -d "$PACKAGE_DIR"
+
           cat <<EOF > annotation.json
           {
             "\$manifest": {
-              "org.opencontainers.image.description": "Build artifact for ${ARTIFACT_ID} version ${PROJECT_VERSION}",
+              "org.opencontainers.image.description": "Build artifact for java-maven-pipeline-example version ${PROJECT_TAG}",
               "org.opencontainers.image.licenses": "Apache-2.0",
               "org.opencontainers.image.source": "${{ github.repositoryUrl }}",
-              "org.opencontainers.image.title": "${ARTIFACT_ID}-artifact",
-              "org.opencontainers.image.version": "${PROJECT_VERSION}"
+              "org.opencontainers.image.title": "java-maven-pipeline-example-artifact",
+              "org.opencontainers.image.version": "${PROJECT_TAG}"
             }
           }
           EOF
+          cd "$PACKAGE_DIR"
           oras login ghcr.io -u ${{ github.actor }} --password-stdin <<< ${{ secrets.GITHUB_TOKEN }}
-          oras push --annotation-file annotation.json --export-manifest manifest.json --artifact-type application/java-archive ghcr.io/${{ github.repository }}/java-maven-pipeline-example:${PROJECT_TAG} ${ARTIFACT_NAME}:application/java-archive
-          MANIFEST=$(cat ./manifest.json)
+          oras push --annotation-file ../annotation.json --export-manifest ../manifest.json ghcr.io/${{ github.repository }}/java-maven-pipeline-example:${PROJECT_TAG} .
+          MANIFEST=$(cat ../manifest.json)
           echo $MANIFEST
           echo "artifact_sha256=$(echo $MANIFEST | jq -r '.layers | map(.digest) | join(",")' | sha256sum | awk '{print $1}')" >> $GITHUB_OUTPUT
           echo "artifact_size=$(echo $MANIFEST | jq -r '.layers | map(.size) | add')" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
+          ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
           PROJECT_VERSION: ${{ steps.set-build-output-parameters.outputs.project_version }}
+          PROJECT_TAG: ${{ steps.set-build-output-parameters.outputs.project_version }}
           ARTIFACT_ID: ${{ steps.set-build-output-parameters.outputs.artifact_id }}
           PACKAGE_TYPE: ${{ steps.set-build-output-parameters.outputs.package_type }}
-          PROJECT_TAG: ${{ steps.set-build-output-parameters.outputs.project_version }}
       - name: Send build info
         run: |
           curl -s POST ${{ env.BROKER_URL }}/v1/intention/action/patch \
               -H 'Content-Type: application/json' \
               -H 'X-Broker-Token: '"${BUILD_TOKEN}"'' \
-              -d '{"package":{"checksum": "sha256:'${ARTIFACT_SHA256}'"}}'
+              -d '{"package":{"checksum": "sha256:'${ARTIFACT_SHA256}'", "size": '${ARTIFACT_SIZE}'}}'
         env:
           ARTIFACT_SHA256: ${{ steps.publish-artifact.outputs.artifact_sha256 }}
+          ARTIFACT_SIZE: ${{ steps.publish-artifact.outputs.artifact_size }}
           BUILD_TOKEN: ${{ env.ACTION_TOKEN_BUILD }}
       - name: Close intention
         if: ${{ success() && env.INTENTION_TOKEN != '' }}
