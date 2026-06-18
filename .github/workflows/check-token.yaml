@@ -26,7 +26,7 @@ jobs:
             -H 'accept: */*' \
             -H 'Authorization: Bearer '"${{ secrets.token }}"'' \
             --retry 2 \
-            --max-time 90 \
+            --max-time 45 \
             --connect-timeout 30 \
             --retry-delay 5 \
           )
