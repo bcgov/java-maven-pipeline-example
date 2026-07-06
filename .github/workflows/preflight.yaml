@@ -59,7 +59,7 @@ jobs:
     outputs:
       can_rebuild: ${{ steps.set-can-rebuild.outputs.can_rebuild }}
     needs: check-release-package
-    if: ${{ inputs.preflight_context == 'build' }}
+    if: ${{ always() && inputs.preflight_context == 'build' }}
     steps:
       - id: set-can-rebuild
         run: |
