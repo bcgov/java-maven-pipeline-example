@@ -61,5 +61,11 @@ jobs:
     needs: check-release-package
     steps:
       - id: set-can-rebuild
-        run: echo "can_rebuild=${{ needs.check-release-package.outputs.can_rebuild }}" >> $GITHUB_OUTPUT
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "can_rebuild=${{ needs.check-release-package.outputs.can_rebuild }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref_type }}" == "branch" ]]; then
+            echo "can_rebuild=true" >> $GITHUB_OUTPUT
+          fi
+
 
