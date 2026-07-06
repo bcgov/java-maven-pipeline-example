@@ -12,6 +12,9 @@ on:
         type: string
         default: "catalog-info.yaml"
         required: false
+    outputs:
+      can_rebuild:
+        value: ${{ jobs.check-release-package.outputs.can_rebuild }}
     secrets:
       token:
         description: "The Broker token"
