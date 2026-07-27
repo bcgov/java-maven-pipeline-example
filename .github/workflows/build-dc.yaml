@@ -31,36 +31,57 @@ jobs:
           REF_NAME="${{ github.ref_name }}"
           SAFE_REF_NAME=$(echo "$REF_NAME" | tr '/' '-')
 
-          if [[ ${{ startsWith(github.ref, 'refs/heads/') }} = true ]]; then
-            echo "tag=${SAFE_REF_NAME}" >> "$GITHUB_OUTPUT"
-          fi
-          if [[ ${{ startsWith(github.ref, 'refs/pull/') }} = true ]]; then
-            echo "tag=${SAFE_REF_NAME}" >> "$GITHUB_OUTPUT"
-          fi
           if [[ ${{ startsWith(github.ref, 'refs/tags/d') }} = true ]]; then
             echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=0.0.0-${SAFE_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
+      - name: Set build output parameters
+        id: set-build-output-parameters
+        run: |
+          echo "git_commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "build_guid=uuid::$(uuidgen)" >> $GITHUB_OUTPUT
+      - name: Build intention
+        run: sh ./.github/workflows/build-dc.sh
+        env:
+          EVENT_REASON: Build deployment config ${{ github.ref_name }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id}}
+          PACKAGE_BUILD_GUID: ${{ steps.set-build-output-parameters.outputs.build_guid }}
+          PACKAGE_BUILD_NUMBER: ${{ github.run_number }}
+          PACKAGE_BUILD_VERSION: ${{ steps.set-build-output-parameters.outputs.git_commit }}
+          PACKAGE_VERSION: ${{ steps.set-version.outputs.tag }}
+      - name: Open intention
+        uses: bcgov-nr/action-broker-intention-open@v2.1.0
+        with:
+          broker_jwt: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
+          intention_path: intention.json
+      - name: Start action java-maven-pipeline-example
+        uses: bcgov-nr/action-broker-action-start@v2.1.0
+        with:
+          action_token: 'ACTION_TOKEN_DCBUILD_0'
       - name: Setup ORAS
         uses: oras-project/setup-oras@v2
-      - name: Verify catalog info and get deploy config path type
+      - name: Get deploy config path and type
         id: catalog-info
         run: |
-          CATALOG_FILE="catalog-info.yaml"
+          # Extract package name from the project slug path
+          project_slug="${{ env.PROJECT_SLUG }}"
+          package_name="${project_slug##*/}"
 
-          if [[ ! -f "$CATALOG_FILE" ]]; then
-            echo "Error: $CATALOG_FILE was not found."
-            exit 1
-          fi
+          # Write directly to outputs
+          echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
+          echo "deploy_type=${{ env.DEPLOY_TYPE }}" >> "$GITHUB_OUTPUT"
+          echo "deploy_config_path=${{ env.DEPLOYMENT_CONFIG_PATHS }}" >> "$GITHUB_OUTPUT"
 
-          service_name="$(yq e '.metadata.name // ""' "$CATALOG_FILE" | tr -d '\r')"
-          deploy_type="$(yq e '.metadata.annotations["playbook.io.nrs.gov.bc.ca/deployType"] // ""' "$CATALOG_FILE" | tr -d '\r')"
-          deploy_config_path="$(yq e '.metadata.annotations["playbook.io.nrs.gov.bc.ca/deploymentConfigPaths"] // ""' "$CATALOG_FILE" | tr -d '\r')"
-          echo "service_name=$service_name" >> "$GITHUB_OUTPUT"
-          echo "deploy_type=$deploy_type" >> "$GITHUB_OUTPUT"
-          echo "deploy_config_path=$deploy_config_path" >> "$GITHUB_OUTPUT"
-          echo "Resolved service_name: $service_name"
-          echo "Resolved deploy_type: $deploy_type"
-          echo "Resolved deploy_config_path: $deploy_config_path"
+          # Clean log summary
+          echo "Resolved package_name: $package_name"
+          echo "Resolved deploy_type: ${{ env.DEPLOY_TYPE }}"
+          echo "Resolved deploy_config_path: ${{ env.DEPLOYMENT_CONFIG_PATHS }}"
+        env:
+          DEPLOYMENT_CONFIG_PATHS: .jenkins catalog-info.yaml playbooks
+          DEPLOY_TYPE: tomcat
+          PROJECT_SLUG: bcgov/java-maven-pipeline-example
       - name: Create annotations files
         run: |
           cat <<EOF > annotation.json
@@ -69,11 +90,15 @@ jobs:
               "org.opencontainers.image.description": "Deployment configuration ${PROJECT_TAG}",
               "org.opencontainers.image.source": "${{ github.repositoryUrl }}",
               "org.opencontainers.image.title": "deployment-config",
-              "org.opencontainers.image.version": "${PROJECT_TAG}"
+              "org.opencontainers.image.version": "${PROJECT_TAG}",
+              "ca.gov.nrs.io.broker.intention.id": "${INTENTION_ID}",
+              "ca.gov.nrs.io.broker.intention.url": "${{ env.BROKER_URL }}/v1/intention/${INTENTION_ID}",
+              "ca.gov.nrs.io.broker.intention.action.services": "java-maven-pipeline-example"
             }
           }
           EOF
         env:
+          INTENTION_ID: ${{ env.INTENTION_ID }}
           PROJECT_TAG: ${{ steps.set-version.outputs.tag }}
       - name: Push deployment config to registry
         id: publish-dc
@@ -89,30 +114,48 @@ jobs:
           echo "sha256: $ARTIFACT_SHA256"
         env:
           PROJECT_TAG: ${{ steps.set-version.outputs.tag }}
+      - name: Send build info
+        run: |
+          echo "Sending build info for action: $ID"
+          curl -s POST "${{ env.BROKER_URL }}/v1/intention/action/patch" \
+            -H 'Content-Type: application/json' \
+            -H "X-Broker-Token: ${ACTION_TOKEN_DCBUILD_0}" \
+            -d "{\"package\":{\"checksum\": \"sha256:${ARTIFACT_SHA256}\", \"size\": ${ARTIFACT_SIZE}}}"
+        env:
+          ARTIFACT_SHA256: ${{ steps.publish-dc.outputs.artifact_sha256 }}
+          ARTIFACT_SIZE: ${{ steps.publish-dc.outputs.artifact_size }}
+      - name: Close intention
+        if: ${{ success() && env.INTENTION_TOKEN != '' }}
+        uses: bcgov-nr/action-broker-intention-close@v3
+        with:
+          intention_token: ${{ env.INTENTION_TOKEN }}
+      - name: Close intention (Failure)
+        if: ${{ failure() && env.INTENTION_TOKEN != '' }}
+        uses: bcgov-nr/action-broker-intention-close@v3
+        with:
+          intention_token: ${{ env.INTENTION_TOKEN }}
+          outcome: failure
       - name: Resolve package link
         id: package-link
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PROJECT_TAG: ${{ steps.set-version.outputs.tag }}
-          PACKAGE_NAME: ${{ steps.catalog-info.outputs.service_name }}/deployment-config
+          PACKAGE_NAME: ${{ steps.catalog-info.outputs.package_name }}/deployment-config
           REPOSITORY_OWNER: ${{ github.repository_owner }}
         run: |
           ENCODED_PACKAGE_NAME="${PACKAGE_NAME//\//%2F}"
           VERSION_ID="$(gh api "orgs/${REPOSITORY_OWNER}/packages/container/${ENCODED_PACKAGE_NAME}/versions" --paginate | jq -r --arg tag "$PROJECT_TAG" '.[] | select((.metadata.container.tags // []) | index($tag)) | .id' | head -n 1)"
-
           if [[ -z "$VERSION_ID" ]]; then
             PACKAGE_URL="https://github.com/${{ github.repository }}/pkgs/container/${ENCODED_PACKAGE_NAME}"
           else
             PACKAGE_URL="https://github.com/${{ github.repository }}/pkgs/container/${ENCODED_PACKAGE_NAME}/${VERSION_ID}?tag=${PROJECT_TAG}"
           fi
-
           echo "package_url=$PACKAGE_URL" >> "$GITHUB_OUTPUT"
       - name: Generate deployment config summary
         if: always()
         run: |
           cat >> $GITHUB_STEP_SUMMARY << EOF
           # Build Deployment Config Summary
-
           | | |
           | - | - |
           | **Deployment Config Tag** | \`${{ env.PROJECT_TAG }}\` |
@@ -121,7 +164,6 @@ jobs:
           | **Deployment Config Path** | \`${{ env.DEPLOY_CONFIG_PATH }}\` |
           | **Artifact SHA256** | \`${{ env.ARTIFACT_SHA256 }}\` |
           | **Artifact Size** | \`${{ env.ARTIFACT_SIZE }}\`
-
           EOF
         env:
           PROJECT_TAG: ${{ steps.set-version.outputs.tag }}
