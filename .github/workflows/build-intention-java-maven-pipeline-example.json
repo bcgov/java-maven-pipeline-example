@@ -16,6 +16,7 @@
       },
       "package": {
         "architecture": "jvm",
+        "category": "software",
         "version": "",
         "buildVersion": "",
         "buildNumber": 0,
