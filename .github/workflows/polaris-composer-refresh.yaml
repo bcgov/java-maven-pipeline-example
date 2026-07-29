@@ -1,9 +1,6 @@
 name: Polaris Pipeline Composer Refresh
 
 on:
-  repository_dispatch:
-    types:
-      - polaris-composer-update
   workflow_dispatch:
 
 concurrency:
