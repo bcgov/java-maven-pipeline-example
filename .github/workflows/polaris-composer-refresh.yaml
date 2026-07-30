@@ -63,7 +63,9 @@ jobs:
       - name: Create pull request
         if: steps.check-changes.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          # Use POLARIS_COMPOSER_TOKEN (PAT or GitHub App token with workflow scope) if set,
+          # otherwise fall back to github.token (requires org to allow workflow file modifications).
+          GH_TOKEN: ${{ secrets.POLARIS_COMPOSER_TOKEN || github.token }}
         run: |
           BRANCH="chore/polaris-composer-refresh"
           git config user.name "polaris-composer-refresh[bot]"
