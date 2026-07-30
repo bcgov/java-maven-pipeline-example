@@ -23,3 +23,4 @@ context: pub#java-maven-pipeline-example
 # By default, the Tomcat port is set dynamically by using the port_manager role
 # If you need to set a static port, replace the dynamic port assignment value with your static value
 tomcat_https_port: "{{ portmanager_assignments[ansible_host] }}"
+
