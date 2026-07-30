@@ -72,6 +72,13 @@ jobs:
           git config user.email "polaris-composer-refresh[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
 
+          # Token type: ghs_ = GitHub App/GITHUB_TOKEN, ghp_ or github_pat_ = PAT
+          if [[ "${GH_TOKEN}" == ghs_* ]]; then
+            echo "Warning: using github.token (GitHub App) — workflow file push may be rejected by org policy."
+          else
+            echo "Using PAT token for push."
+          fi
+
           EXISTING_PR=$(gh pr list --head "${BRANCH}" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
 
           git add .github/workflows/ AGENTS.md 2>/dev/null || true
