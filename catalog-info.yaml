@@ -30,7 +30,7 @@ metadata:
     playbook.io.nrs.gov.bc.ca/artifactRepositoryPath: https://maven.pkg.github.com/bcgov/java-maven-pipeline-example
     playbook.io.nrs.gov.bc.ca/deploymentConfigPaths: playbooks
     playbook.io.nrs.gov.bc.ca/deployType: tomcat
-    playbook.io.nrs.gov.bc.ca/artifactSrc: github
+    playbook.io.nrs.gov.bc.ca/artifactSrc: repo
     playbook.io.nrs.gov.bc.ca/publishArtifactSuffix: dist
     playbook.io.nrs.gov.bc.ca/mavenBuildCommand: --batch-mode -Dmaven.test.skip=true -Pgithub clean package
     playbook.io.nrs.gov.bc.ca/addLog4j2Config: false
