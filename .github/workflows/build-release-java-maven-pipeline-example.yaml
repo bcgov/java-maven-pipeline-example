@@ -46,10 +46,12 @@ jobs:
       intention_id: ${{ steps.set-intention-id.outputs.intention_id }}
     if: ${{ needs.preflight.outputs.can_rebuild == 'true' }}
     steps:
-      - uses: actions/checkout@v6
+      - name: Sparse checkout actions
+        uses: actions/checkout@v6
         with:
-          sparse-checkout: '.github/actions/composite-build-setup/action.yml'
-      - id: composite-build-setup
+          sparse-checkout: '.github/actions/composite-build-setup'
+      - name: Composite build setup
+        id: composite-build-setup
         uses: ./.github/actions/composite-build-setup
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
