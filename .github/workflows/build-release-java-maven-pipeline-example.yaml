@@ -70,13 +70,6 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
-
-      - name: Set version
-        id: set-version
-        run: |
-          echo "VERSION=${APP_VERSION}" >> $GITHUB_ENV
-        env:
-          APP_VERSION: ${{ steps.composite-build-setup.outputs.version }}
       - name: Set build output parameters
         id: set-build-output-parameters
         run: |
