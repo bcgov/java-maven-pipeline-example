@@ -50,8 +50,8 @@ jobs:
         uses: actions/checkout@v6
         with:
           sparse-checkout: '.github/actions/version-detect'
-      - name: Composite build setup
-        id: version-detct
+      - name: Version detect
+        id: version-detect
         uses: ./.github/actions/version-detect
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
