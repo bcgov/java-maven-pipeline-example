@@ -79,6 +79,8 @@ jobs:
           echo "package_type=$(./mvnw help:evaluate -Dexpression=project.packaging -q -DforceStdout)" >> $GITHUB_OUTPUT
           echo "git_commit=$(git rev-parse --verify HEAD)" >> $GITHUB_OUTPUT
           echo "build_guid=uuid::$(uuidgen)" >> $GITHUB_OUTPUT
+        env:
+          VERSION: ${{ steps.composite-build-setup.outputs.version }}
       - name: Build intention
         run: sh ./.github/workflows/build-intention-java-maven-pipeline-example.sh
         env:
@@ -138,6 +140,7 @@ jobs:
           echo "artifact_sha256=$(echo $MANIFEST | jq -r '.layers | map(.digest) | join(",")' | sha256sum | awk '{print $1}')" >> $GITHUB_OUTPUT
           echo "artifact_size=$(echo $MANIFEST | jq -r '.layers | map(.size) | add')" >> $GITHUB_OUTPUT
         env:
+          VERSION: ${{ steps.composite-build-setup.outputs.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
           ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
