@@ -32,5 +32,6 @@ spec:
     addTomcatContext: false
     createDataTmpDir: false
     clientId: e985d455-b0ff-470b-8731-e004fcfac915
-    publishArtifactSuffix: dist
-    customRunner: null
+    publishArtifactSuffix: .
+    publishBaseDirectory: dist
+    customRunner: "group: Larger Runners - OpenShift Static-IP"

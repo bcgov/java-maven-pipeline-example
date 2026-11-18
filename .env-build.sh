@@ -20,10 +20,22 @@ export PROJECT_NAME="oscar-example"
 export SERVICE_NAME="java-maven-pipeline-example"
 export PACKAGE_REPO="https://maven.pkg.github.com/bcgov/java-maven-pipeline-example"
 
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 # Maven build configuration
 export POM_ROOT="./"
 export MAVEN_ARGS="--file $POM_ROOT"
 export PUBLISH_DIR="dist"
+# Base version precedence: VERSION env var > pom.xml > VERSION file > fallback.
+if [[ -z "${VERSION:-}" ]]; then
+  if command -v mvn >/dev/null 2>&1 && [[ -f "${POM_ROOT}/pom.xml" ]]; then
+    if MVN_VERSION="$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout --file "${POM_ROOT}/pom.xml" 2>/dev/null)"; then
+      VERSION="$(printf '%s' "$MVN_VERSION" | tail -n 1 | tr -d '[:space:]')"
+    fi
+  fi
+  if [[ -z "${VERSION:-}" && -f "${SCRIPT_DIR}/VERSION" ]]; then
+    VERSION="$(head -n 1 "${SCRIPT_DIR}/VERSION" | tr -d '[:space:]')"
+  fi
+fi
 export VERSION="${VERSION:-0.0.0-SNAPSHOT}"
 
 # Only fetch vault secrets if --skip-vault is not set
