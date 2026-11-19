@@ -18,7 +18,7 @@ env:
   SERVICE_PROJECT: oscar-example
   SERVICE_NAME: java-maven-pipeline-example
   JOB: buildByToken/buildWithParameters?job=oscar-example/java-maven-pipeline-example
-  URL: https://cd.io.nrs.gov.bc.ca
+  URL: https://polaris-jenkins-dev.apps.silver.devops.gov.bc.ca
   PACKAGE_REPO: ghcr.io/${{ github.repository }}/java-maven-pipeline-example
 
 jobs:
