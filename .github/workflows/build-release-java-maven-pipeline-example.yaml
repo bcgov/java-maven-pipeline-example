@@ -35,8 +35,10 @@ jobs:
       token: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
   build-publish:
     name: Build and publish
-    runs-on:
-      group: Larger Runners - OpenShift Static-IP
+    env:
+      BROKER_ENABLED: ${{ needs.preflight.outputs.broker_enabled }}
+    runs-on: >-
+      ${{ fromJSON(needs.preflight.outputs.broker_enabled == 'true' && '{"group":"Larger Runners - OpenShift Static-IP"}' || '"ubuntu-latest"') }}
     needs: preflight
     permissions:
       contents: read
@@ -48,7 +50,7 @@ jobs:
     if: ${{ needs.preflight.outputs.can_rebuild == 'true' }}
     steps:
       - name: Sparse checkout actions
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           sparse-checkout: '.github/actions/version-detect'
       - name: Version detect
@@ -58,15 +60,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_VERSION: ${{ env.DEFAULT_VERSION }}
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
             fetch-depth: 0
             fetch-tags: true
             ref: ${{ steps.version-detect.outputs.checkout_ref }}
       - name: Setup ORAS
+        if: ${{ 'website' != 'library' || false }}
         uses: oras-project/setup-oras@v2
       - name: Set up Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -83,6 +86,7 @@ jobs:
         env:
           VERSION: ${{ steps.version-detect.outputs.version }}
       - name: Build intention
+        if: ${{ env.BROKER_ENABLED == 'true' }}
         run: sh ./.github/workflows/build-intention-java-maven-pipeline-example.sh
         env:
           EVENT_REASON: Build ${{ github.ref_name }}
@@ -91,22 +95,31 @@ jobs:
           PACKAGE_BUILD_GUID:  ${{ steps.set-build-output-parameters.outputs.build_guid }}
           PACKAGE_BUILD_NUMBER: ${{ github.run_number }}
           PACKAGE_BUILD_VERSION: ${{ steps.set-build-output-parameters.outputs.git_commit }}
-          PACKAGE_TYPE: application/vnd.oci.image.layer.v1.tar+gzip
+          PACKAGE_TYPE: ${{ 'website' != 'library' && 'application/vnd.oci.image.layer.v1.tar+gzip' || steps.set-build-output-parameters.outputs.package_type }}
           PACKAGE_VERSION: ${{ steps.set-build-output-parameters.outputs.project_version }}
       - name: Open intention
+        if: ${{ env.BROKER_ENABLED == 'true' }}
         uses: bcgov-nr/action-broker-intention-open@v2
         with:
-          broker_jwt: ${{ secrets.broker_jwt_e985d455_b0ff_470b_8731_e004fcfac915 }}
+          broker_jwt: ${{ env.BROKER_JWT }}
           intention_path: intention.json
           quickstart: true
       - name: Echo intention ID for deploy job
         id: set-intention-id
+        if: ${{ env.BROKER_ENABLED == 'true' }}
         run: |
           echo "intention_id=${INTENTION_ID}" >> $GITHUB_OUTPUT
         env:
           INTENTION_ID: ${{ env.INTENTION_ID }}
-      - name: Publish artifact
-        id: publish-artifact
+      - name: Pull static artifacts
+        if: ${{ 'website' != 'library' && false }}
+        uses: ./.github/actions/pull-static-artifacts
+        with:
+          oci_artifacts: '[]'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          working_directory: ./
+      - name: Build artifact
+        if: ${{ 'website' != 'library' }}
         working-directory: ./
         run: |
           source ./env.sh build ./ --skip-vault
@@ -121,25 +134,6 @@ jobs:
           rm -rf "$PACKAGE_DIR"
           mkdir -p "$PACKAGE_DIR"
           unzip -o "$ARTIFACT_FILE" -d "$PACKAGE_DIR"
-
-          cat <<EOF > annotation.json
-          {
-            "\$manifest": {
-              "org.opencontainers.image.description": "Build artifact for java-maven-pipeline-example version ${PROJECT_TAG}",
-              "org.opencontainers.image.licenses": "Apache-2.0",
-              "org.opencontainers.image.source": "${{ github.repositoryUrl }}",
-              "org.opencontainers.image.title": "java-maven-pipeline-example-artifact",
-              "org.opencontainers.image.version": "${PROJECT_TAG}"
-            }
-          }
-          EOF
-          cd "$PACKAGE_DIR"
-          oras login ghcr.io -u ${{ github.actor }} --password-stdin <<< ${{ secrets.GITHUB_TOKEN }}
-          oras push --annotation-file ../annotation.json --export-manifest ../manifest.json ghcr.io/${{ github.repository }}/java-maven-pipeline-example:${PROJECT_TAG} .
-          MANIFEST=$(cat ../manifest.json)
-          echo $MANIFEST
-          echo "artifact_sha256=$(echo $MANIFEST | jq -r '.layers | map(.digest) | join(",")' | sha256sum | awk '{print $1}')" >> $GITHUB_OUTPUT
-          echo "artifact_size=$(echo $MANIFEST | jq -r '.layers | map(.size) | add')" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
@@ -149,7 +143,19 @@ jobs:
           ARTIFACT_ID: ${{ steps.set-build-output-parameters.outputs.artifact_id }}
           PACKAGE_TYPE: ${{ steps.set-build-output-parameters.outputs.package_type }}
           VERSION: ${{ steps.version-detect.outputs.version }}
+      - name: Publish artifact
+        if: ${{ 'website' != 'library' }}
+        id: publish-artifact
+        uses: ./.github/actions/oci-publish
+        with:
+          service_name: java-maven-pipeline-example
+          license: Apache-2.0
+          project_tag: ${{ steps.set-build-output-parameters.outputs.project_version }}
+          publish_dir: .
+          working_directory: ./dist
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Send build info
+        if: ${{ 'website' != 'library' && env.BROKER_ENABLED == 'true' }}
         run: |
           curl -s -X POST ${{ env.BROKER_URL }}/v1/intention/action/patch \
               -H 'Content-Type: application/json' \
@@ -163,13 +169,27 @@ jobs:
           ARTIFACT_SHA256: ${{ steps.publish-artifact.outputs.artifact_sha256 }}
           ARTIFACT_SIZE: ${{ steps.publish-artifact.outputs.artifact_size }}
           BUILD_TOKEN: ${{ env.ACTION_TOKEN_BUILD }}
+      - name: Publish library artifact
+        if: ${{ 'website' == 'library' }}
+        run: |
+          source ./env.sh build ./ --skip-vault
+          PACKAGE_DIR="${PUBLISH_DIR:-dist}"
+          PACKAGE_DIR="${PACKAGE_DIR%% *}"
+          ./mvnw --batch-mode -Dmaven.test.skip=true -Pgithub clean package -Dpublish.dir="$PACKAGE_DIR"
+        env:
+          VERSION: ${{ steps.version-detect.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
+          ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          BUILD_URL: ${{ github.repositoryUrl }}
       - name: Close intention
-        if: ${{ success() && env.INTENTION_TOKEN != '' }}
+        if: ${{ success() && env.INTENTION_TOKEN != '' && env.BROKER_ENABLED == 'true' }}
         uses: bcgov-nr/action-broker-intention-close@v3
         with:
           intention_token: ${{ env.INTENTION_TOKEN }}
       - name: Close intention (Failure)
-        if: ${{ failure() && env.INTENTION_TOKEN != '' }}
+        if: ${{ failure() && env.INTENTION_TOKEN != '' && env.BROKER_ENABLED == 'true' }}
         uses: bcgov-nr/action-broker-intention-close@v3
         with:
           intention_token: ${{ env.INTENTION_TOKEN }}
@@ -185,12 +205,14 @@ jobs:
           | **Ref** | \`${{ env.CHECKOUT_REF }}\` |
           | **Commit** | [${COMMIT_HASH:0:7}](https://github.com/${{ github.repository }}/tree/${COMMIT_HASH}) |
           | **Version** | ${PROJECT_VERSION} |
-          | **Artifact SHA256** | ${ARTIFACT_SHA256} |
 
           EOF
+          if [ "website" != "library" ]; then
+            echo "| **Artifact SHA256** | ${ARTIFACT_SHA256} |" >> $GITHUB_STEP_SUMMARY
+          fi
         env:
           CHECKOUT_REF: ${{ steps.version-detect.outputs.checkout_ref }}
           COMMIT_HASH: ${{ steps.set-build-output-parameters.outputs.git_commit }}
           PROJECT_VERSION: ${{ steps.set-build-output-parameters.outputs.project_version }}
-          ARTIFACT_SHA256: ${{ steps.publish-artifact.outputs.artifact_sha256 }}
+          ARTIFACT_SHA256: ${{ steps.publish-artifact.outputs.artifact_sha256 || 'N/A' }}
 
